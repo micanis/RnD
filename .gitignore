@@ -1,0 +1,40 @@
+# Python の生成ファイル
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info/
+
+# OS / エディタ固有ファイル
+.DS_Store
+
+# 仮想環境
+.venv/
+uv.lock
+
+# 生データ（動画・画像）
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.jpg
+*.jpeg
+*.png
+
+# モデルの重みファイル
+*.pt
+*.pt2
+*.pth
+*.onnx
+*.bin
+
+# 機械学習の中間データ
+*.npy
+*.npz
+*.skeleton
+
+# 一時ディレクトリ
+tmp/
+.cache/
+logs/

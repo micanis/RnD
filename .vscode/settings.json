@@ -1,0 +1,54 @@
+{
+    "latex-workshop.latex.tools": [
+        {
+            "name": "latex",
+            "command": "bash",
+            "args": [
+                "-lc",
+                "latexmk -lualatex -synctex=1 -interaction=nonstopmode %DOC% ; exit 0"
+        ]
+        },
+        {
+            "name": "movePDF",
+            "command": "mv",
+            "args": ["%DOCFILE%.pdf", "../pdf/"]
+        }
+        
+    ],
+    "latex-workshop.latex.recipes": [
+        {"name": "Build", "tools": ["latex", "movePDF"]}
+    ],
+    "latex-workshop.latex.recipe.default": "Build",
+    "latex-workshop.intellisense.package.enabled": true,
+    "latex-workshop.latex.clean.method": "glob",
+    "latex-workshop.latex.autoClean.run": "onBuilt",
+    "latex-workshop.latex.autoBuild.run": "never",
+    "latex-workshop.latex.clean.fileTypes": [
+        "%DOCFILE%.aux",
+        "%DOCFILE%.bbl",
+        "%DOCFILE%.blg",
+        "%DOCFILE%.idx",
+        "%DOCFILE%.ind",
+        "%DOCFILE%.lof",
+        "%DOCFILE%.lot",
+        "%DOCFILE%.out",
+        "%DOCFILE%.toc",
+        "%DOCFILE%.acn",
+        "%DOCFILE%.acr",
+        "%DOCFILE%.alg",
+        "%DOCFILE%.glg",
+        "%DOCFILE%.glo",
+        "%DOCFILE%.gls",
+        "%DOCFILE%.fls",
+        "%DOCFILE%.log",
+        "%DOCFILE%.fdb_latexmk",
+        "%DOCFILE%.snm",
+        "%DOCFILE%.synctex(busy)",
+        "%DOCFILE%.synctex.gz(busy)",
+        "%DOCFILE%.nav",
+        "%DOCFILE%.vrb",
+        "*.gz",
+        "chapters/*.aux"
+    ],
+    "git.ignoreLimitWarning": true,
+}
