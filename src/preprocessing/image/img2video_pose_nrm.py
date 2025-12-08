@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 import questionary
 
-from utils.build_path import PATHS
+from utils.paths import PATHS
 
 CANVAS_SIZE = 512
 MARGIN_RATIO = 0.1

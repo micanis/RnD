@@ -6,13 +6,13 @@ import cv2
 import questionary
 
 try:
-    from utils.build_path import PATHS
+    from utils.paths import PATHS
 except ModuleNotFoundError:
     PROJECT_ROOT = Path(__file__).resolve().parents[2]
     SRC_DIR = PROJECT_ROOT / "src"
     if str(SRC_DIR) not in sys.path:
         sys.path.insert(0, str(SRC_DIR))
-    from utils.build_path import PATHS
+    from utils.paths import PATHS
 
 from hpe.sapiens.sapiens_inference.detector import Detector
 

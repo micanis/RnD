@@ -4,7 +4,7 @@ import questionary
 from pathlib import Path
 from tqdm import tqdm
 from abc import ABC, abstractmethod
-from utils.build_path import PATHS
+from utils.paths import PATHS
 
 
 # ============================================================

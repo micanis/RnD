@@ -35,7 +35,7 @@ def download(url: str, filename: str):
                     pb.update(len(chunk))
                     f.write(chunk)
 
-from utils.build_path import PATHS
+from utils.paths import PATHS
 
 def download_hf_model(model_name: str, model_dir: str = f'{PATHS.sapiens}/models'):
     if not os.path.exists(model_dir):

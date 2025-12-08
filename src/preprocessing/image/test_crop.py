@@ -7,7 +7,7 @@ from typing import Dict, Tuple, Optional
 import cv2
 import numpy as np
 
-from utils.build_path import PATHS
+from utils.paths import PATHS
 
 # 入出力パス
 # 入力画像はhpeする前のパス、座標は検出後のjsonファイルのパス

@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from pathlib import Path
 import glob
-from utils.build_path import PATHS
+from utils.paths import PATHS
 from utils.sampling import sample_frames
 
 # === 設定 ===

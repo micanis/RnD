@@ -10,14 +10,14 @@ import torch
 import questionary
 
 try:
-    from utils.build_path import PATHS
+    from utils.paths import PATHS
     from utils.select_target import select_target_coordinate
 except ModuleNotFoundError:
     PROJECT_ROOT = Path(__file__).resolve().parents[2]
     SRC_DIR = PROJECT_ROOT / "src"
     if str(SRC_DIR) not in sys.path:
         sys.path.insert(0, str(SRC_DIR))
-    from utils.build_path import PATHS
+    from utils.paths import PATHS
     from utils.select_target import select_target_coordinate
 
 from sapiens.sapiens_inference import (

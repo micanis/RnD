@@ -4,7 +4,7 @@ import numpy as np
 from ultralytics import YOLO
 
 # 自作
-from utils.build_path import PATHS
+from utils.paths import PATHS
 
 @dataclass
 class DetectorConfig:
