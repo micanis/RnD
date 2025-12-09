@@ -11,7 +11,10 @@ from models.sapiens.sapiens_inference.detector import Detector
 from .pose_classes_and_palettes import (
     GOLIATH_KPTS_COLORS,
     GOLIATH_SKELETON_INFO,
-    GOLIATH_KEYPOINTS
+    GOLIATH_KEYPOINTS,
+    NEON_RED,
+    NEON_BLUE,
+    NEON_PURPLE,
 )
 
 
@@ -111,12 +114,30 @@ class SapiensPoseEstimation:
     def draw_keypoints(self, img: np.ndarray, keypoints: dict, bbox: List[float]) -> np.ndarray:
         img_copy = img.copy()
 
+        def node_color(name: str) -> tuple[int, int, int]:
+            if name.startswith("right_"):
+                return NEON_RED
+            if name.startswith("left_"):
+                return NEON_BLUE
+            return (255, 255, 255)
+
+        def edge_color(a: str, b: str) -> tuple[int, int, int]:
+            a_left, b_left = a.startswith("left_"), b.startswith("left_")
+            a_right, b_right = a.startswith("right_"), b.startswith("right_")
+            if (a_left and b_left):
+                return NEON_BLUE
+            if (a_right and b_right):
+                return NEON_RED
+            if (a_left and b_right) or (a_right and b_left):
+                return NEON_PURPLE
+            return (255, 255, 255)
+
         # Draw keypoints on the image (already absolute coords)
         for i, (name, (x, y, conf)) in enumerate(keypoints.items()):
             if conf > 0.3:  # Only draw confident keypoints
                 x_coord = int(x)
                 y_coord = int(y)
-                cv2.circle(img_copy, (x_coord, y_coord), 1, GOLIATH_KPTS_COLORS[i], -1)
+                cv2.circle(img_copy, (x_coord, y_coord), 1, node_color(name), -1)
 
         # Optionally draw skeleton
         for _, link_info in GOLIATH_SKELETON_INFO.items():
@@ -129,6 +150,12 @@ class SapiensPoseEstimation:
                     y1_coord = int(pt1[1])
                     x2_coord = int(pt2[0])
                     y2_coord = int(pt2[1])
-                    cv2.line(img_copy, (x1_coord, y1_coord), (x2_coord, y2_coord), GOLIATH_KPTS_COLORS[i], 1)
+                    cv2.line(
+                        img_copy,
+                        (x1_coord, y1_coord),
+                        (x2_coord, y2_coord),
+                        edge_color(pt1_name, pt2_name),
+                        1,
+                    )
 
         return img_copy

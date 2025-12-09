@@ -8,12 +8,14 @@ from tqdm import tqdm
 
 try:
     from src.utils.paths import PATHS, RESOLVE
+    from src.utils.cli_select import select_hierarchy
 except ModuleNotFoundError:
     PROJECT_ROOT = Path(__file__).resolve().parents[2]
     SRC_DIR = PROJECT_ROOT / "src"
     if str(SRC_DIR) not in sys.path:
         sys.path.insert(0, str(SRC_DIR))
     from utils.paths import PATHS, RESOLVE
+    from utils.cli_select import select_hierarchy
 
 
 def parse_video_info(video_path: Path, video_root: Path) -> tuple[str, str, str]:
@@ -32,17 +34,6 @@ def parse_video_info(video_path: Path, video_root: Path) -> tuple[str, str, str]
     camera, subject = parts[0], parts[1]
     condition = Path(parts[-1]).stem
     return camera, subject, condition
-
-
-def choose_dir(prompt: str, dirs: list[Path]) -> Path | None:
-    if not dirs:
-        return None
-    dirs = sorted(dirs)
-    selection = questionary.select(
-        prompt,
-        choices=[questionary.Choice(d.name, value=d) for d in dirs],
-    ).ask()
-    return selection
 
 
 # ============================================================
@@ -147,26 +138,24 @@ def select_videos(video_root: Path) -> list[Path]:
         print(f"⚠️ 入力ディレクトリがありません: {video_root}")
         return []
 
-    camera_dir = choose_dir("カメラディレクトリを選択してください:", [
-        p for p in video_root.iterdir() if p.is_dir()
-    ])
-    if camera_dir is None:
-        print(f"⚠️ {video_root} 配下にサブディレクトリがありません。")
-        return []
-
-    person_dir = choose_dir("人物/シナリオディレクトリを選択してください:", [
-        p for p in camera_dir.iterdir() if p.is_dir()
-    ])
-    if person_dir is None:
-        print(f"⚠️ {camera_dir} 配下に人物ディレクトリがありません。")
+    try:
+        subject_dir = select_hierarchy(
+            video_root,
+            [
+                ("カメラディレクトリを選択してください:", lambda p: (d for d in p.iterdir() if d.is_dir())),
+                ("人物/シナリオディレクトリを選択してください:", lambda p: (d for d in p.iterdir() if d.is_dir())),
+            ],
+        )
+    except RuntimeError as e:
+        print(f"⚠️ {e}")
         return []
 
     videos = sorted(
-        p for p in person_dir.iterdir()
+        p for p in subject_dir.iterdir()
         if p.is_file() and p.suffix.lower() in EXTENSIONS
     )
     if not videos:
-        print(f"⚠️ {person_dir} に動画が見つかりません。")
+        print(f"⚠️ {subject_dir} に動画が見つかりません。")
         return []
 
     choices = [questionary.Choice(p.name, value=p) for p in videos]

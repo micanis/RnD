@@ -7,10 +7,10 @@ import numpy as np
 
 import cv2
 import torch
-import questionary
 
 try:
     from src.utils.paths import PATHS, RESOLVE
+    from src.utils.cli_select import select_hierarchy
     from src.utils.select_target import select_target_coordinate
 except ModuleNotFoundError:
     PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -18,6 +18,7 @@ except ModuleNotFoundError:
     if str(SRC_DIR) not in sys.path:
         sys.path.insert(0, str(SRC_DIR))
     from utils.paths import PATHS, RESOLVE
+    from utils.cli_select import select_hierarchy
     from utils.select_target import select_target_coordinate
 
 from models.sapiens.sapiens_inference.pose import (
@@ -45,18 +46,6 @@ RUN_CONFIG = {
 }
 
 
-def _select_dir(prompt: str, dirs: list[Path]) -> Path:
-    if not dirs:
-        raise RuntimeError(f"{prompt} 候補がありません。")
-    selected = questionary.select(
-        prompt,
-        choices=[questionary.Choice(d.name, value=d) for d in sorted(dirs)],
-    ).ask()
-    if selected is None:
-        raise RuntimeError("選択がキャンセルされました。")
-    return selected
-
-
 def choose_frames_dir(frames_root: Path = FRAMES_ROOT) -> Path:
     """
     data/interim/frames/<camera>/<subject>/<condition>/<surface> を順に選択し、
@@ -65,20 +54,15 @@ def choose_frames_dir(frames_root: Path = FRAMES_ROOT) -> Path:
     if not frames_root.exists():
         raise RuntimeError(f"入力元ディレクトリが見つかりません: {frames_root}")
 
-    camera_dir = _select_dir("カメラディレクトリを選択してください:", [
-        p for p in frames_root.iterdir() if p.is_dir()
-    ])
-    subject_dir = _select_dir("人物/シナリオディレクトリを選択してください:", [
-        p for p in camera_dir.iterdir() if p.is_dir()
-    ])
-    condition_dir = _select_dir("条件ディレクトリを選択してください:", [
-        p for p in subject_dir.iterdir() if p.is_dir()
-    ])
-    surface_dir = _select_dir("面 (single / left / right) を選択してください:", [
-        p for p in condition_dir.iterdir() if p.is_dir()
-    ])
-
-    return surface_dir
+    return select_hierarchy(
+        frames_root,
+        [
+            ("カメラディレクトリを選択してください:", lambda p: (d for d in p.iterdir() if d.is_dir())),
+            ("人物/シナリオディレクトリを選択してください:", lambda p: (d for d in p.iterdir() if d.is_dir())),
+            ("条件ディレクトリを選択してください:", lambda p: (d for d in p.iterdir() if d.is_dir())),
+            ("面 (single / left / right) を選択してください:", lambda p: (d for d in p.iterdir() if d.is_dir())),
+        ],
+    )
 
 
 def parse_frames_info(frames_dir: Path, frames_root: Path = FRAMES_ROOT) -> tuple[str, str, str, str]:

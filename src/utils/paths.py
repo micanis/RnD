@@ -1,8 +1,5 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable, Literal
-
-import questionary
 
 
 # ------------------------------------------------------------
@@ -49,7 +46,7 @@ class BasePaths:
 
 
 # ------------------------------------------------------------
-# PathResolver: person / condition / camera に応じて動的に解決
+# PathResolver: subject / condition / camera に応じて動的に解決
 # ------------------------------------------------------------
 class PathResolver:
     def __init__(self, base: BasePaths):
@@ -114,6 +111,12 @@ class PathResolver:
         """
         return self.base.processed / "gcn_skeletons" / model / camera / subject / condition
 
+    def hpe_data_dir(self, model: str, camera: str, subject: str, condition: str, surface: str):
+        """
+        data/processed/hpe_data/sapiens/fisheye/person00/light_on/left
+        """
+        return self.base.processed / "hpe_data" / model / camera / subject / condition / surface
+
     # ----------------------
     # Experiments
     # ----------------------
@@ -144,85 +147,6 @@ class PathResolver:
 # ------------------------------------------------------------
 PATHS = BasePaths()
 RESOLVE = PathResolver(PATHS)
-
-
-def _normalize_extensions(extensions: Iterable[str] | None) -> set[str]:
-    if not extensions:
-        return set()
-    return {
-        ext if ext.startswith(".") else f".{ext}"
-        for ext in (ext.lower() for ext in extensions)
-    }
-
-
-def ask_path(
-    message: str,
-    base_dir: Path | None = None,
-    *,
-    kind: Literal["dir", "file"] = "dir",
-    extensions: Iterable[str] | None = None,
-    choices: Iterable[Path] | None = None,
-    allow_manual: bool = True,
-    create: bool = False,
-) -> Path | None:
-    """
-    questionaryでファイル/フォルダパスを選択するヘルパー。
-
-    - choices が与えられていればそれを候補とする。
-    - base_dir が与えられればその直下をスキャンして候補を作る。
-    - allow_manual=True なら任意のパス入力も受け付ける。
-    - kind == \"dir\" かつ create=True なら選択後にフォルダを自動作成する。
-    """
-    base_dir = base_dir or PATHS.root
-    manual_token = "__manual__"
-    normalized_exts = _normalize_extensions(extensions)
-
-    if create and kind == "dir":
-        base_dir.mkdir(parents=True, exist_ok=True)
-
-    if choices is not None:
-        candidates = sorted(Path(c) for c in choices)
-    elif base_dir.exists():
-        if kind == "dir":
-            candidates = sorted(p for p in base_dir.iterdir() if p.is_dir())
-        else:
-            candidates = sorted(
-                p
-                for p in base_dir.iterdir()
-                if p.is_file() and (not normalized_exts or p.suffix.lower() in normalized_exts)
-            )
-    else:
-        candidates = []
-
-    question_choices = [questionary.Choice(str(p), value=p) for p in candidates]
-    if allow_manual:
-        question_choices.append(questionary.Choice("別のパスを指定する", value=manual_token))
-
-    if not question_choices:
-        return None
-
-    selected = questionary.select(message, choices=question_choices).ask()
-    if selected is None:
-        return None
-
-    if selected == manual_token:
-        manual_input = questionary.path(
-            "パスを入力してください:",
-            default=str(base_dir),
-            only_directories=kind == "dir",
-        ).ask()
-        if not manual_input:
-            return None
-        selected_path = Path(manual_input).expanduser()
-    else:
-        selected_path = Path(selected)
-
-    if not selected_path.exists():
-        if kind == "dir" and create:
-            selected_path.mkdir(parents=True, exist_ok=True)
-        else:
-            raise FileNotFoundError(f"指定されたパスが存在しません: {selected_path}")
-    return selected_path
 
 
 if __name__ == "__main__":

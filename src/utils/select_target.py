@@ -7,12 +7,14 @@ import questionary
 
 try:
     from utils.paths import PATHS
+    from utils.cli_select import select_hierarchy
 except ModuleNotFoundError:
     PROJECT_ROOT = Path(__file__).resolve().parents[2]
     SRC_DIR = PROJECT_ROOT / "src"
     if str(SRC_DIR) not in sys.path:
         sys.path.insert(0, str(SRC_DIR))
     from utils.paths import PATHS
+    from utils.cli_select import select_hierarchy
 
 from models.sapiens.sapiens_inference.detector import Detector
 
@@ -32,18 +34,6 @@ def collect_images(image_dir: Path, extensions: Iterable[str], max_images: int) 
     return images[:max_images]
 
 
-def _select_dir(prompt: str, dirs: list[Path]) -> Path:
-    if not dirs:
-        raise RuntimeError(f"{prompt} 候補がありません。")
-    selected = questionary.select(
-        prompt,
-        choices=[questionary.Choice(d.name, value=d) for d in sorted(dirs)],
-    ).ask()
-    if selected is None:
-        raise RuntimeError("Selection canceled.")
-    return selected
-
-
 def choose_frames_dir(frames_root: Path = FRAMES_ROOT) -> Path:
     """
     data/interim/frames/<camera>/<subject>/<condition>/<surface> を順に選択して返す。
@@ -51,19 +41,15 @@ def choose_frames_dir(frames_root: Path = FRAMES_ROOT) -> Path:
     if not frames_root.exists():
         raise RuntimeError(f"Frames root not found: {frames_root}")
 
-    camera_dir = _select_dir("カメラディレクトリを選択してください:", [
-        p for p in frames_root.iterdir() if p.is_dir()
-    ])
-    subject_dir = _select_dir("人物/シナリオディレクトリを選択してください:", [
-        p for p in camera_dir.iterdir() if p.is_dir()
-    ])
-    condition_dir = _select_dir("条件ディレクトリを選択してください:", [
-        p for p in subject_dir.iterdir() if p.is_dir()
-    ])
-    surface_dir = _select_dir("面 (single / left / right) を選択してください:", [
-        p for p in condition_dir.iterdir() if p.is_dir()
-    ])
-    return surface_dir
+    return select_hierarchy(
+        frames_root,
+        [
+            ("カメラディレクトリを選択してください:", lambda p: (d for d in p.iterdir() if d.is_dir())),
+            ("人物/シナリオディレクトリを選択してください:", lambda p: (d for d in p.iterdir() if d.is_dir())),
+            ("条件ディレクトリを選択してください:", lambda p: (d for d in p.iterdir() if d.is_dir())),
+            ("面 (single / left / right) を選択してください:", lambda p: (d for d in p.iterdir() if d.is_dir())),
+        ],
+    )
 
 
 def average_boxes(detector: Detector, images: list[Path]) -> list[tuple[float, float]]:

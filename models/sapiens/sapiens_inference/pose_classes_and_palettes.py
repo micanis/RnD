@@ -466,6 +466,11 @@ GOLIATH_KPTS_COLORS = [
     [32, 192, 192],   # 343: r_border_of_pupil_midpoint_2
 ]
 
+# Neon palette (BGR) used dynamically in pose.py
+NEON_RED = (20, 20, 255)
+NEON_BLUE = (255, 60, 30)
+NEON_PURPLE = (200, 50, 255)
+
 GOLIATH_KEYPOINTS = [
     "nose",
     "left_eye",

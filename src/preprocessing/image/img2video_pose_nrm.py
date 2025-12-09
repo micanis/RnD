@@ -8,7 +8,8 @@ import cv2
 import numpy as np
 import questionary
 
-from utils.paths import PATHS, ask_path
+from utils.paths import PATHS
+from utils.cli_select import select_path
 
 CANVAS_SIZE = 512
 MARGIN_RATIO = 0.1
@@ -125,7 +126,7 @@ def choose_json_dir() -> Path | None:
         print(f"⚠️ jsonフォルダが見つかりませんでした: {root}")
         return None
 
-    return ask_path(
+    return select_path(
         "使用する /output/hpe/ 以下の json ディレクトリを選択してください:",
         choices=json_dirs,
         kind="dir",
