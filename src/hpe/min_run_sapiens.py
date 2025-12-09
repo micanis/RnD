@@ -15,14 +15,14 @@ except ModuleNotFoundError:
         sys.path.insert(0, str(SRC_DIR))
     from utils.paths import PATHS
 
-from sapiens.sapiens_inference import (
+from models.sapiens.sapiens_inference.pose import (
     SapiensPoseEstimation,
     SapiensPoseEstimationType,
 )
 
 # ---- 設定（必要に応じて書き換えてください） ----
 # 任意の1枚の画像パスを指定する
-IMAGE_PATH = PATHS.data / "sample.jpg"
+IMAGE_PATH = PATHS.tmp / "000.jpg"
 # 出力は tmp/ 配下にまとめる
 OUTPUT_DIR = PATHS.tmp / "sapiens_min"
 

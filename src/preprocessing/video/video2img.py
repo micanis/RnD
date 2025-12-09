@@ -1,10 +1,48 @@
-import cv2
 import sys
-import questionary
-from pathlib import Path
-from tqdm import tqdm
 from abc import ABC, abstractmethod
-from utils.paths import PATHS
+from pathlib import Path
+
+import cv2
+import questionary
+from tqdm import tqdm
+
+try:
+    from src.utils.paths import PATHS, RESOLVE
+except ModuleNotFoundError:
+    PROJECT_ROOT = Path(__file__).resolve().parents[2]
+    SRC_DIR = PROJECT_ROOT / "src"
+    if str(SRC_DIR) not in sys.path:
+        sys.path.insert(0, str(SRC_DIR))
+    from utils.paths import PATHS, RESOLVE
+
+
+def parse_video_info(video_path: Path, video_root: Path) -> tuple[str, str, str]:
+    """data/raw/video/<camera>/<subject>/<condition>.* からメタ情報を抽出"""
+    try:
+        rel = video_path.relative_to(video_root)
+    except ValueError:
+        raise ValueError(f"{video_path} は {video_root} 配下ではありません。")
+
+    parts = rel.parts
+    if len(parts) < 3:
+        raise ValueError(
+            f"想定パス data/raw/video/<camera>/<person>/<condition>.* に合いません: {video_path}"
+        )
+
+    camera, subject = parts[0], parts[1]
+    condition = Path(parts[-1]).stem
+    return camera, subject, condition
+
+
+def choose_dir(prompt: str, dirs: list[Path]) -> Path | None:
+    if not dirs:
+        return None
+    dirs = sorted(dirs)
+    selection = questionary.select(
+        prompt,
+        choices=[questionary.Choice(d.name, value=d) for d in dirs],
+    ).ask()
+    return selection
 
 
 # ============================================================
@@ -14,11 +52,13 @@ from utils.paths import PATHS
 class VideoProcessor(ABC):
     """動画をフレーム画像に変換する抽象クラス"""
 
-    def __init__(self, video_path: Path):
+    def __init__(self, video_path: Path, camera: str, subject: str, condition: str):
         self.video_path = video_path
+        self.camera = camera
+        self.subject = subject
+        self.condition = condition
         self.cap = None
-        self.save_dir = PATHS.output / "from_video" / self.video_path.stem
-        self.save_dir.mkdir(parents=True, exist_ok=True)
+        self.save_dir: Path | None = None
 
     def open_video(self):
         self.cap = cv2.VideoCapture(str(self.video_path))
@@ -60,6 +100,11 @@ class VideoProcessor(ABC):
 class NormalVideoProcessor(VideoProcessor):
     """通常動画のフレームをそのまま保存"""
 
+    def __init__(self, video_path: Path, camera: str, subject: str, condition: str):
+        super().__init__(video_path, camera, subject, condition)
+        self.save_dir = RESOLVE.frames_dir(camera, subject, condition, "single")
+        self.save_dir.mkdir(parents=True, exist_ok=True)
+
     def process_frame(self, frame, idx: int):
         save_path = self.save_dir / f"{str(idx).zfill(self.digit)}.jpg"
         cv2.imwrite(str(save_path), frame)
@@ -72,12 +117,13 @@ class NormalVideoProcessor(VideoProcessor):
 class FisheyeVideoProcessor(VideoProcessor):
     """魚眼動画（左右に分割して保存）"""
 
-    def __init__(self, video_path: Path):
-        super().__init__(video_path)
-        self.left_dir = self.save_dir / "left"
-        self.right_dir = self.save_dir / "right"
-        self.left_dir.mkdir(exist_ok=True)
-        self.right_dir.mkdir(exist_ok=True)
+    def __init__(self, video_path: Path, camera: str, subject: str, condition: str):
+        super().__init__(video_path, camera, subject, condition)
+        self.left_dir = RESOLVE.frames_dir(camera, subject, condition, "left")
+        self.right_dir = RESOLVE.frames_dir(camera, subject, condition, "right")
+        self.left_dir.mkdir(parents=True, exist_ok=True)
+        self.right_dir.mkdir(parents=True, exist_ok=True)
+        self.save_dir = self.left_dir.parent
 
     def process_frame(self, frame, idx: int):
         h, w, _ = frame.shape
@@ -93,30 +139,42 @@ class FisheyeVideoProcessor(VideoProcessor):
 # ユーティリティ関数
 # ============================================================
 
-def select_videos(video_dir: Path) -> list[Path]:
-    """input/video 内の動画を選択"""
+def select_videos(video_root: Path) -> list[Path]:
+    """data/raw/video 以下を階層ごとに選択（camera -> person -> video file）"""
     EXTENSIONS = {".mp4", ".mov", ".avi", ".mkv"}
 
-    if not video_dir.exists():
-        video_dir.mkdir(parents=True)
-        print(f"📁 {video_dir} を作成しました。ここに動画を入れてください。")
-        sys.exit()
+    if not video_root.exists():
+        print(f"⚠️ 入力ディレクトリがありません: {video_root}")
+        return []
 
-    videos = [
-        p for p in video_dir.iterdir()
+    camera_dir = choose_dir("カメラディレクトリを選択してください:", [
+        p for p in video_root.iterdir() if p.is_dir()
+    ])
+    if camera_dir is None:
+        print(f"⚠️ {video_root} 配下にサブディレクトリがありません。")
+        return []
+
+    person_dir = choose_dir("人物/シナリオディレクトリを選択してください:", [
+        p for p in camera_dir.iterdir() if p.is_dir()
+    ])
+    if person_dir is None:
+        print(f"⚠️ {camera_dir} 配下に人物ディレクトリがありません。")
+        return []
+
+    videos = sorted(
+        p for p in person_dir.iterdir()
         if p.is_file() and p.suffix.lower() in EXTENSIONS
-    ]
-
+    )
     if not videos:
-        print(f"⚠️ {video_dir} に動画が見つかりません。")
-        sys.exit()
+        print(f"⚠️ {person_dir} に動画が見つかりません。")
+        return []
 
     choices = [questionary.Choice(p.name, value=p) for p in videos]
     selected = questionary.checkbox(
         "処理する動画を選択してください (スペースで選択/解除 -> Enterで決定):",
         choices=choices
     ).ask()
-    return selected
+    return selected or []
 
 
 # ============================================================
@@ -124,29 +182,22 @@ def select_videos(video_dir: Path) -> list[Path]:
 # ============================================================
 
 def main():
-    video_input_dir = PATHS.input / "video"
-    target_videos = select_videos(video_input_dir)
+    video_root = PATHS.raw / "video"
+    target_videos = select_videos(video_root)
 
     if not target_videos:
         print("キャンセルされました。")
         return
 
-    mode = questionary.select(
-        "動画の形式を選択してください:",
-        choices=[
-            "通常動画 (1映像)",
-            "魚眼動画 (左右2映像)"
-        ]
-    ).ask()
-
-    print(f"\n📹 {len(target_videos)} 本の動画を処理します... ({mode})\n")
+    print(f"\n📹 {len(target_videos)} 本の動画を処理します...\n")
 
     for video in target_videos:
         try:
-            if mode == "通常動画 (1映像)":
-                processor = NormalVideoProcessor(video)
+            camera, subject, condition = parse_video_info(video, video_root)
+            if camera.lower() == "fisheye":
+                processor = FisheyeVideoProcessor(video, camera, subject, condition)
             else:
-                processor = FisheyeVideoProcessor(video)
+                processor = NormalVideoProcessor(video, camera, subject, condition)
             processor.run()
         except Exception as e:
             print(f"⚠️ {video.name} の処理中にエラー: {e}")

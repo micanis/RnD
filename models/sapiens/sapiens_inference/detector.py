@@ -1,14 +1,15 @@
+import cv2
 import time
 from dataclasses import dataclass
 import numpy as np
 from ultralytics import YOLO
 
 # 自作
-from utils.paths import PATHS
+from src.utils.paths import PATHS
 
 @dataclass
 class DetectorConfig:
-    model_path: str = f"{PATHS.sapiens}/models/yolov8m.pt"
+    model_path: str = f"{PATHS.models}/sapiens/models/yolov8m.pt"
     person_id: int = 0
     conf_thres: float = 0.25
 
@@ -44,14 +45,3 @@ class Detector:
 
         print(f"Detection inference took: {time.perf_counter() - start:.4f} seconds")
         return boxes
-
-
-if __name__ == "__main__":
-    import cv2
-
-    detector = Detector()
-    img = cv2.imread("../ComfyUI_00074_.png")
-    boxes = detector.detect(img)
-    draw_img = draw_boxes(img, boxes)
-    cv2.imshow("img", draw_img)
-    cv2.waitKey(0)

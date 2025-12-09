@@ -14,10 +14,11 @@ except ModuleNotFoundError:
         sys.path.insert(0, str(SRC_DIR))
     from utils.paths import PATHS
 
-from hpe.sapiens.sapiens_inference.detector import Detector
+from models.sapiens.sapiens_inference.detector import Detector
 
 
-DEFAULT_INPUT_DIR = PATHS.output / "from_video"
+FRAMES_ROOT = PATHS.interim / "frames"
+DEFAULT_INPUT_DIR: Path | None = None
 
 
 def collect_images(image_dir: Path, extensions: Iterable[str], max_images: int) -> list[Path]:
@@ -29,6 +30,40 @@ def collect_images(image_dir: Path, extensions: Iterable[str], max_images: int) 
         p for p in image_dir.iterdir() if p.is_file() and p.suffix.lower() in exts
     )
     return images[:max_images]
+
+
+def _select_dir(prompt: str, dirs: list[Path]) -> Path:
+    if not dirs:
+        raise RuntimeError(f"{prompt} 候補がありません。")
+    selected = questionary.select(
+        prompt,
+        choices=[questionary.Choice(d.name, value=d) for d in sorted(dirs)],
+    ).ask()
+    if selected is None:
+        raise RuntimeError("Selection canceled.")
+    return selected
+
+
+def choose_frames_dir(frames_root: Path = FRAMES_ROOT) -> Path:
+    """
+    data/interim/frames/<camera>/<subject>/<condition>/<surface> を順に選択して返す。
+    """
+    if not frames_root.exists():
+        raise RuntimeError(f"Frames root not found: {frames_root}")
+
+    camera_dir = _select_dir("カメラディレクトリを選択してください:", [
+        p for p in frames_root.iterdir() if p.is_dir()
+    ])
+    subject_dir = _select_dir("人物/シナリオディレクトリを選択してください:", [
+        p for p in camera_dir.iterdir() if p.is_dir()
+    ])
+    condition_dir = _select_dir("条件ディレクトリを選択してください:", [
+        p for p in subject_dir.iterdir() if p.is_dir()
+    ])
+    surface_dir = _select_dir("面 (single / left / right) を選択してください:", [
+        p for p in condition_dir.iterdir() if p.is_dir()
+    ])
+    return surface_dir
 
 
 def average_boxes(detector: Detector, images: list[Path]) -> list[tuple[float, float]]:
@@ -76,7 +111,7 @@ def choose_coordinate(averages: list[tuple[float, float]]) -> tuple[float, float
 
 
 def select_target_coordinate(
-    image_dir: Path = DEFAULT_INPUT_DIR,
+    image_dir: Path | None = DEFAULT_INPUT_DIR,
     extensions: Iterable[str] = (".jpg", ".jpeg", ".png"),
     max_images: int = 30,
     detector: Detector | None = None,
@@ -85,6 +120,9 @@ def select_target_coordinate(
     画像フォルダ内の先頭max_images枚で人物検出し、インデックスごとの平均中心座標を算出。
     questionaryでユーザーに選ばせ、1つの(x, y)座標を返す。
     """
+    if image_dir is None:
+        image_dir = choose_frames_dir(FRAMES_ROOT)
+
     images = collect_images(image_dir, extensions, max_images)
     if not images:
         raise RuntimeError(f"No images found in {image_dir}")

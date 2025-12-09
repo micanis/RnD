@@ -42,3 +42,6 @@ logs/
 # 論文
 thesis-teu-tex25/
 .texmf-var/
+
+# 研究
+data/

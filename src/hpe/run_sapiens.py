@@ -10,25 +10,26 @@ import torch
 import questionary
 
 try:
-    from src.utils.paths import PATHS
+    from src.utils.paths import PATHS, RESOLVE
     from src.utils.select_target import select_target_coordinate
 except ModuleNotFoundError:
     PROJECT_ROOT = Path(__file__).resolve().parents[2]
     SRC_DIR = PROJECT_ROOT / "src"
     if str(SRC_DIR) not in sys.path:
         sys.path.insert(0, str(SRC_DIR))
-    from utils.paths import PATHS
+    from utils.paths import PATHS, RESOLVE
     from utils.select_target import select_target_coordinate
 
-from models.sapiens.sapiens_inference import (
+from models.sapiens.sapiens_inference.pose import (
     SapiensPoseEstimation,
     SapiensPoseEstimationType,
 )
 
 
-FROM_VIDEO_ROOT = PATHS.output / "from_video"
+FRAMES_ROOT = PATHS.interim / "frames"
+HPE_MODEL_NAME = "sapiens"
 DEFAULT_INPUT_DIR: Path | None = None  # questionaryで選択する前提
-DEFAULT_OUTPUT_ROOT: Path | None = None  # questionaryで選択する前提
+DEFAULT_OUTPUT_ROOT: Path | None = None  # 指定がなければ hpe_json/hpe_vis 下へ自動決定
 DEFAULT_EXTENSIONS = (".jpg", ".jpeg", ".png")
 
 # 実行時に変更したい場合はここを編集する（CLIは提供しない）
@@ -44,37 +45,60 @@ RUN_CONFIG = {
 }
 
 
-def choose_from_video_dir(base_dir: Path = FROM_VIDEO_ROOT) -> tuple[Path, Path]:
-    if not base_dir.exists():
-        raise RuntimeError(f"入力元ディレクトリが見つかりません: {base_dir}")
-
-    candidates = sorted(p for p in base_dir.iterdir() if p.is_dir())
-    if not candidates:
-        raise RuntimeError(f"{base_dir} にサブディレクトリがありません。")
-
-    case_dir = questionary.select(
-        "output/from_video 以下から使用するフォルダを選択してください:",
-        choices=[questionary.Choice(p.name, value=p) for p in candidates],
+def _select_dir(prompt: str, dirs: list[Path]) -> Path:
+    if not dirs:
+        raise RuntimeError(f"{prompt} 候補がありません。")
+    selected = questionary.select(
+        prompt,
+        choices=[questionary.Choice(d.name, value=d) for d in sorted(dirs)],
     ).ask()
-    if case_dir is None:
+    if selected is None:
         raise RuntimeError("選択がキャンセルされました。")
+    return selected
 
-    side_dirs = [d for d in (case_dir / "left", case_dir / "right") if d.exists()]
-    if not side_dirs:
-        raise RuntimeError(f"{case_dir} に left/right ディレクトリが見つかりません。")
 
-    if len(side_dirs) == 1:
-        selected_side = side_dirs[0]
-    else:
-        selected_side = questionary.select(
-            "left / right どちらを使用しますか？",
-            choices=[questionary.Choice(d.name, value=d) for d in side_dirs],
-        ).ask()
-        if selected_side is None:
-            raise RuntimeError("選択がキャンセルされました。")
+def choose_frames_dir(frames_root: Path = FRAMES_ROOT) -> Path:
+    """
+    data/interim/frames/<camera>/<subject>/<condition>/<surface> を順に選択し、
+    入力ディレクトリを返す。
+    """
+    if not frames_root.exists():
+        raise RuntimeError(f"入力元ディレクトリが見つかりません: {frames_root}")
 
-    output_root = PATHS.output / "hpe" / "sapiens" / case_dir.name / selected_side.name
-    return selected_side, output_root
+    camera_dir = _select_dir("カメラディレクトリを選択してください:", [
+        p for p in frames_root.iterdir() if p.is_dir()
+    ])
+    subject_dir = _select_dir("人物/シナリオディレクトリを選択してください:", [
+        p for p in camera_dir.iterdir() if p.is_dir()
+    ])
+    condition_dir = _select_dir("条件ディレクトリを選択してください:", [
+        p for p in subject_dir.iterdir() if p.is_dir()
+    ])
+    surface_dir = _select_dir("面 (single / left / right) を選択してください:", [
+        p for p in condition_dir.iterdir() if p.is_dir()
+    ])
+
+    return surface_dir
+
+
+def parse_frames_info(frames_dir: Path, frames_root: Path = FRAMES_ROOT) -> tuple[str, str, str, str]:
+    rel = frames_dir.relative_to(frames_root)
+    parts = rel.parts
+    if len(parts) < 4:
+        raise ValueError(
+            f"想定パス data/interim/frames/<camera>/<subject>/<condition>/<surface> に合いません: {frames_dir}"
+        )
+    camera, subject, condition, surface = parts[:4]
+    return camera, subject, condition, surface
+
+
+def compute_output_dirs(camera: str, subject: str, condition: str, surface: str) -> tuple[Path, Path]:
+    """
+    出力先を hpe_vis / hpe_json で揃える。surface ごとにサブディレクトリを切る。
+    """
+    image_dir = RESOLVE.hpe_vis_dir(HPE_MODEL_NAME, camera, subject, condition) / surface
+    json_dir = RESOLVE.hpe_json_dir(HPE_MODEL_NAME, camera, subject, condition) / surface
+    return image_dir, json_dir
 
 RIGHT_HAND_KEYPOINTS = {
     "right_thumb4",
@@ -138,9 +162,7 @@ UPPER_BODY_KEYPOINTS = {
 TARGET_KEYPOINTS = RIGHT_HAND_KEYPOINTS | LEFT_HAND_KEYPOINTS | UPPER_BODY_KEYPOINTS
 
 
-def prepare_paths(input_dir: Path, output_root: Path) -> tuple[Path, Path, Path]:
-    image_dir = output_root / "images"
-    json_dir = output_root / "json"
+def prepare_paths(input_dir: Path, image_dir: Path, json_dir: Path) -> tuple[Path, Path, Path]:
     image_dir.mkdir(parents=True, exist_ok=True)
     json_dir.mkdir(parents=True, exist_ok=True)
     return input_dir, image_dir, json_dir
@@ -342,8 +364,18 @@ def run_sapiens(
     max_images_for_target: int = 30,
     estimator: SapiensPoseEstimation | None = None,
 ) -> None:
-    if input_dir is None or output_root is None:
-        input_dir, output_root = choose_from_video_dir(FROM_VIDEO_ROOT)
+    if input_dir is None:
+        input_dir = choose_frames_dir(FRAMES_ROOT)
+
+    camera, subject, condition, surface = parse_frames_info(input_dir, FRAMES_ROOT)
+
+    if output_root is None:
+        output_image_dir, output_json_dir = compute_output_dirs(
+            camera, subject, condition, surface
+        )
+    else:
+        output_image_dir = output_root / "images"
+        output_json_dir = output_root / "json"
 
     device, dtype, device_name, gpu_memory = choose_device()
     describe_device(device, dtype, device_name, gpu_memory)
@@ -363,7 +395,7 @@ def run_sapiens(
         )
 
     input_dir, output_image_dir, output_json_dir = prepare_paths(
-        input_dir, output_root
+        input_dir, output_image_dir, output_json_dir
     )
     images = collect_images(input_dir, extensions)
 

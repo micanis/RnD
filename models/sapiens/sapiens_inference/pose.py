@@ -4,14 +4,11 @@ from typing import List
 import cv2
 import numpy as np
 import torch
-import torch.nn.functional as F
 
-from .common import pose_estimation_preprocessor, TaskType, download_hf_model
-from .detector import Detector, DetectorConfig
+from models.sapiens.sapiens_inference.common import pose_estimation_preprocessor, download_hf_model
+from models.sapiens.sapiens_inference.detector import Detector
 
 from .pose_classes_and_palettes import (
-    COCO_KPTS_COLORS,
-    COCO_WHOLEBODY_KPTS_COLORS,
     GOLIATH_KPTS_COLORS,
     GOLIATH_SKELETON_INFO,
     GOLIATH_KEYPOINTS
@@ -60,7 +57,7 @@ class SapiensPoseEstimation:
         img: np.ndarray,
         bboxes: List[List[float]],
         allowed_keypoints: set[str] | None = None,
-    ) -> (np.ndarray, List[dict]):
+    ) -> (np.ndarray | List[dict]):
         all_keypoints = []
         result_img = img.copy()
 
@@ -135,25 +132,3 @@ class SapiensPoseEstimation:
                     cv2.line(img_copy, (x1_coord, y1_coord), (x2_coord, y2_coord), GOLIATH_KPTS_COLORS[i], 1)
 
         return img_copy
-
-
-
-
-if __name__ == "__main__":
-    type = torch.float32
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    img_path = "test.jpg"
-    img = cv2.imread(img_path)
-
-    model_type = SapiensPoseEstimationType.POSE_ESTIMATION_03B
-    estimator = SapiensPoseEstimation(model_type)
-
-    start = time.perf_counter()
-    result_img, keypoints = estimator(img)
-    
-    print(f"Time taken: {time.perf_counter() - start:.4f} seconds")
-
-    
-    cv2.imshow("pose_estimation", result_img)
-    cv2.waitKey(0)

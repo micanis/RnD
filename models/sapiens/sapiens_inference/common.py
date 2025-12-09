@@ -1,12 +1,12 @@
 import os
-import shutil
 from typing import List
 import requests
 from tqdm import tqdm
 from enum import Enum
-from huggingface_hub import hf_hub_download, hf_hub_url
+from huggingface_hub import hf_hub_url
 
 from torchvision import transforms
+from src.utils.paths import PATHS
 
 
 class TaskType(Enum):
@@ -35,9 +35,8 @@ def download(url: str, filename: str):
                     pb.update(len(chunk))
                     f.write(chunk)
 
-from utils.paths import PATHS
 
-def download_hf_model(model_name: str, model_dir: str = f'{PATHS.sapiens}/models'):
+def download_hf_model(model_name: str, model_dir: str = f'{PATHS.models}/sapiens/models'):
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
 
