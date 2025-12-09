@@ -1,0 +1,10 @@
+$latex = 'lualatex %O -synctex=1 -halt-on-error -interaction=nonstopmode -file-line-error %S';
+$bibtex = 'pbibtex';
+$pvc_view_file_via_temporary = 0;
+$pdf_previewer = 'open -ga /Applications/Skim.app';
+
+# LuaTeX/otf cache path (ensure writable in repo)
+my $localcache = "$ENV{PWD}/.texmf-var";
+mkdir $localcache unless -d $localcache;
+$ENV{'TEXMFVAR'} = $localcache;
+$ENV{'LUAOTFLOAD_CACHE_DIR'} = $localcache;

@@ -1,0 +1,319 @@
+% thesis-teu.sty -- 東京工科大学卒業論文スタイルファイル
+% 2009年 星研究室　品田 良太 thesis.sty (塙・生野・廣田) をベースに修正
+% 2022年 井上 専攻制への対応を追加
+
+\typeout{Document Style `thesis' .<4 Sep 2022>}
+
+% 見出しの深さ
+% 3 -> 1.1.1
+% 4 -> 1.1.1.1  (個人的には4は深すぎると思います)
+\setcounter{secnumdepth}{3}
+
+% 学籍番号
+% 8文字に分け、3文字目で専攻制以前とそれ以降に分ける
+\def\idnum#1#2#3#4#5#6#7#8{%
+  \gdef\@idnumw{#1~~#2~~#3~~#4~~#5~~#6~~#7~~#8}
+  \gdef\@idnum{#1#2#3#4#5#6#7#8}
+  \gdef\@division{#3}
+}
+
+% 指導教員
+\def\advisor#1{\gdef\@advisor{#1}}
+
+% 年度
+\def\nendo#1#2#3#4{
+  \gdef\@nendo{#1~#2~#3~#4~年~度}
+}
+
+% 研究室名・概要・長いタイトルは２分割
+\def\lab#1{\gdef\@lab{#1}}			    % 研究室
+\def\jabst#1{\long\gdef\@jabst{#1}}		% 概要
+\def\longtitle#1#2{\gdef\@titleone{#1} \gdef\@titletwo{#2}} % 2行で書くタイトル
+
+% 大学名・論文種類・学部名・専攻名
+\def\daigaku#1{\gdef\@daigaku{#1}}
+\def\thesis#1{\gdef\@thesis{#1}}
+\def\gakubu#1{\gdef\@gakubu{#1}}
+\def\senkou#1{\gdef\@senkou{#1}}
+
+% 所属 (大学院は別のテンプレートを使用してください)
+\newcommand{\schoolofcs}{%
+  {\daigaku{東~~~京~~~工~~~科~~~大~~~学}}
+  {\thesis{卒~~~業~~~論~~~文}}
+  {\gakubu{コンピュータサイエンス学部}}
+  \ifthenelse{\NOT \equal{\@division}{1}}{%
+    \ifthenelse{\equal{\@division}{A}}{%
+      \senkou{先進情報専攻}
+    }{%
+      \senkou{人工知能専攻}
+    }
+  }
+}
+
+%% 外表紙 
+%% 長いタイトルを2行に分けたい場合は「短い題目」をコメントアウトし、長い題目の2行を有効にしてください
+\def\makecover{
+\begin{titlepage}%
+\begin{center}%
+\unitlength=1mm%
+\begin{picture}(210,200)(20,70)%
+  \put(55,250){\underline{\makebox(80,10){\huge [~~ \@thesis~~ ]}}}%
+  \put(45,220){\makebox(100,10){\Large \@title }}
+  % ↓longtitleを使う人向け
+  % \put(45,220){\makebox(100,10){\Large \@titletwo}}
+  % \put(45,227){\makebox(100,10){\Large \@titleone}}
+  \put(45,220){\line(1,0){100}}
+  \put(45,200){\makebox(100,15){\Large (指~導~教~員) \hspace*{1cm} \@advisor}}%
+  %
+  \ifthenelse{\equal{\@division}{1}}{%
+    \put(45,140){\underline{\makebox(100,8){\Large \hfil \@gakubu \hfil \@lab 研究室 \hfil}}}
+  }{
+    \put(45,150){\makebox(100,6){\Large \@gakubu \hfil \@senkou}}
+    \put(45,140){\underline{\makebox(100,6){\Large \@lab 研究室}}}
+  }
+  %
+  \put(45,117){\underline{\makebox(40,6){\large 学籍番号 ~ \@idnum}}}%
+  % \put(45,117){\underline{\makebox(40,6){\large 学籍番号 ~ \@idnumw}}}%
+  \put(45,100){\underline{\makebox(100,10){\huge\@author}}}
+  \put(70,70){\makebox(100,15){\Large [~ \@nendo~ ] }}
+\end{picture}%
+\end{center}%
+\end{titlepage}}
+
+%% 内表紙
+%% 長いタイトルを2行に分けたい場合は「短い題目」をコメントアウトし、長い題目の2行を有効にしてください
+\def\maketitle{\begin{titlepage}
+\let\footnotesize\small \let\footnoterule\relax \thispagestyle{empty}
+\null \vfil
+\begin{center}
+\vspace*{-4mm}
+\large \@daigaku\\
+\vspace{10mm}
+\Large{\bf \@thesis}
+\end{center}
+\vspace{10mm}
+\begin{center}
+\setlength{\unitlength}{1mm}
+\begin{picture}(133,175)
+\linethickness{0.5mm}
+\put(3,175){論~文~題~目}
+\put(-2.2,145){\framebox(138,34){}}
+\put(-2.2,145.1){\framebox(138,34){}}
+\put(-2.1,145.1){\framebox(138,34){}}
+\put(0,145){\makebox(133,34)[c]{{\Large\bf \@title}}}            % 短い題目
+% \put(0,147){\makebox(133,34)[c]{{\Large \Large \bf \@titleone}}}  % 長い題目
+% \put(0,140){\makebox(133,34)[c]{{\Large \Large \bf \@titletwo}}}  % 長い題目
+\thinlines
+\put(13,125){指~導~教~員}
+\put(45,120){\framebox(87,13){{\Large \@advisor}}}
+\put(13,100){提~~出~~日}
+\put(45,100){\makebox(88,4){{\Large \@date}}}
+\put(13,75){提~~出~~者}
+\ifthenelse{\equal{\@division}{1}}{%
+  %2019年以前
+  \multiput(20,13)(0,17){4}{\line(1,0){113}}
+  \put(20,13){\line(0,1){51}}
+  \put(46,13){\line(0,1){51}}
+  \put(133,13){\line(0,1){51}}
+  \put(20,47){\makebox(26,17){学~~~~~部}}
+  \put(20,30){\makebox(26,17){学籍番号}}
+  \put(20,13){\makebox(26,17){氏~~~~~名}}
+  \put(45,47){\makebox(87,17){{\Large \@gakubu}}}
+  \put(45,30){\makebox(87,17){{\Large \@idnum}}}
+  % \put(45,15){\makebox(87,15){{\Large \@idnumw}}}
+  \put(45,13){\makebox(87,17){{\Large \@author}}}
+}{%
+  %2020年以降
+  \multiput(20,0)(0,15){5}{\line(1,0){113}}
+  \put(20,0){\line(0,1){60}}
+  \put(46,0){\line(0,1){60}}
+  \put(133,0){\line(0,1){60}}
+  \put(20,45){\makebox(26,15){学~~~~~部}}
+  \put(20,30){\makebox(26,15){専~~~~~攻}}
+  \put(20,15){\makebox(26,15){学籍番号}}
+  \put(20,0){\makebox(26,15){氏~~~~~名}}
+  \put(45,45){\makebox(87,15){{\Large \@gakubu}}}
+  \put(45,30){\makebox(87,15){{\Large \@senkou}}}
+  \put(45,15){\makebox(87,15){{\Large \@idnum}}}
+  % \put(45,15){\makebox(87,15){{\Large \@idnumw}}}
+  \put(45,0){\makebox(87,15){{\Large \@author}}}
+}
+\end{picture}
+\end{center} \par
+\end{titlepage}
+\setcounter{footnote}{0} \let\thanks\relax \gdef\@date{} \let\maketitle\relax }
+
+
+%% 論文概要
+%% 長いタイトルの場合は表紙と同様の処理をしてください
+\def\makejabstract{%
+\begingroup
+\let\footnoterule\relax
+\setlength{\unitlength}{1mm}
+\thispagestyle{empty}
+\begin{center}
+% \long\begin{picture}(150,220)(5,20)
+\long\begin{picture}(150,220)(8,20)
+\put(0,0){\framebox(165,258){}}
+\put(0,241){\framebox(165,17){\large \@nendo \hspace*{1em} \@thesis \hspace*{1em} 概~~~~~要}}
+\put(3,235){\large 論~文~題~目}
+\put(0,216){\makebox(165,25)[c]{{\Large\bf \@title}}}
+% \put(0,215){\makebox(165,30)[c]{{\Large \bf \@titleone}}}
+% \put(0,208){\makebox(165,30)[c]{{\Large \bf \@titletwo}}}
+\put(0,195){\framebox(165,21){}}
+\ifthenelse{\equal{\@division}{1}}{%
+  \put(0,205){\makebox(50,11)[c]{\shortstack{\normalsize \@gakubu}}}
+}{%
+  \put(0,205){\makebox(50,11)[c]{\shortstack{\normalsize \@gakubu \\ \@senkou}}}
+}
+\put(0,205){\line(1,0){50}} 
+\put(0,193){\makebox(50,10){\large \@idnum}}
+% \put(0,193){\makebox(50,10){\large \@idnumw}}
+\put(3,200){\makebox(50,5)[l]{学籍番号}}
+\put(50,195){\framebox(8,21){\shortstack{\large 氏\\ \\ \\ \large 名}}}
+\put(58,195){\makebox(50,21){{\Large \@author}}}
+\put(108,195){\framebox(8,21){\shortstack{
+\large 指\\ \large 導\\ \large 教\\ \large 員}}}
+\put(116,195){\makebox(50,21){{\Large \@advisor}}}
+\large
+\put(83,185){\makebox(-10,0)[t]{
+\begin{minipage}{170mm}
+\renewcommand{\baselinestretch}{3.0}
+\begin{quotation}
+\baselineskip=7.5mm
+\@jabst
+\end{quotation}
+\end{minipage}
+}}
+\end{picture}
+\end{center}
+\endgroup}
+\gdef\@title{}\gdef\@author{}\gdef\@idnum{}\gdef\@advisor{}\gdef\@gakubu{}
+\gdef\@date{}\gdef\@nendo{}\gdef\@thank{}
+
+
+%%%% jreport.styの変更
+%%%%
+
+%% 目次
+%%
+\def\tableofcontents{\@restonecolfalse\if@twocolumn\@restonecoltrue\onecolumn
+ \fi\chapter*{目 次\@mkboth{目 次}{目 次}}
+ \@starttoc{toc}\if@restonecol\twocolumn\fi \newpage}
+\def\listoffigures{\@restonecolfalse\if@twocolumn\@restonecoltrue\onecolumn
+ \fi\chapter*{図 目 次\@mkboth {図 目 次}{図 目 次}}
+ \@starttoc{lof}\if@restonecol\twocolumn\fi \newpage}
+\def\l@figure{\@dottedtocline{1}{1.5em}{2.3em}}
+\def\listoftables{\@restonecolfalse\if@twocolumn\@restonecoltrue\onecolumn
+ \fi\chapter*{表 目 次\@mkboth {表 目 次}{表 目 次}}
+ \@starttoc{lot}\if@restonecol\twocolumn\fi \newpage}
+\let\l@table\l@figure
+\def\listofprograms{\@restonecolfalse\if@twocolumn\@restonecoltrue\onecolumn
+ \fi\chapter*{プログラム目次\@mkboth {プログラム目次}{プログラム目次}}
+ \@starttoc{lop}\if@restonecol\twocolumn\fi \newpage}
+\let\l@program\l@figure
+
+%% 章見出し
+%%
+\def\@chapapp{第\thechapter 章}
+\def\@makechapterhead#1{ % 章番号あり
+ \vspace*{50pt} { \parindent 0pt \raggedright 
+ \ifnum \c@secnumdepth >\m@ne \huge\bf \@chapapp{} \par 
+ \vskip 20pt \fi \Huge \bf #1\par \nobreak \vskip 40pt } }
+
+\def\@makeschapterhead#1{ % 章番号なし
+ \vspace*{50pt} { \parindent 0pt \raggedright 
+ \Huge \bf #1\par \nobreak \vskip 40pt } }
+
+\def\chapter{ % 章
+ \clearpage \thispagestyle{plain} \global\@topnum\z@
+ \@afterindenttrue \secdef\@chapter\@schapter} 
+\newcounter{chapterx}
+\def\@chapter[#1]#2{ % \chapter{}
+ \refstepcounter{chapterx}
+ \ifnum \c@secnumdepth >\m@ne
+ \refstepcounter{chapter}
+ \typeout{\@chapapp}
+ \addcontentsline{toc}{chapter}{\protect
+ \numberline{\thechapter}#1}\else
+ \addcontentsline{toc}{chapter}{#1}\fi
+ \chaptermark{#1}
+ \addtocontents{lof}{\protect\addvspace{10pt}}
+ \addtocontents{lot}{\protect\addvspace{10pt}}
+ \addtocontents{lop}{\protect\addvspace{10pt}}\if@twocolumn
+\@topnewpage[\@makechapterhead{#2}] 
+ \else \@makechapterhead{#2}
+ \@afterheading \fi} 
+\def\@schapter#1{ % \chapter*{}
+ \if@twocolumn \@topnewpage[\@makeschapterhead{#1}]
+ \else \@makeschapterhead{#1} 
+ \@afterheading\fi}
+
+\makeatletter
+\def\ps@headings{\let\@mkboth\markboth
+\def\@oddhead{$\underline{\makebox[\textwidth]{{\sl\leftmark}\hfill{\sl\rightmark}}}$}
+\def\@oddfoot{\rm\hfil\thepage\hfil}
+\def\@evenhead{$\underline{\makebox[\textwidth]{{\sl\leftmark}\hfill{\sl\rightmark}}}$}
+\def\@evenfoot{\rm\hfil\thepage\hfil}
+\def\chaptermark##1{\markboth{\ifnum\c@secnumdepth >\m@ne\thechapter.\ \fi ##1}{}}
+\def\sectionmark##1{\markright{\ifnum\c@secnumdepth >\z@\thesection.\ \fi ##1}}}
+
+%% 謝辞
+%%
+\def\@maketheacknowledgments{{\vspace*{50pt}\parindent 0pt \raggedright
+ \Huge \bf 謝辞 \par \vskip 10mm}}
+\def\theacknowledgments{\newpage \thispagestyle{plain}
+ \refstepcounter{chapter}
+ \typeout{謝辞}
+ \addcontentsline{toc}{chapter}{謝辞}
+ \markboth{}{} \@maketheacknowledgments \@afterheading}
+
+%% 参考文献
+%%
+\def\thebibliography#1{\chapter*{参考文献\@mkboth {参考文献}{参考文献}}
+ \refstepcounter{chapter}
+ \typeout{参考文献}
+ \addcontentsline{toc}{chapter}{参考文献}
+ \list
+ {[\arabic{enumi}]}{\settowidth\labelwidth{[#1]}\leftmargin\labelwidth
+ \advance\leftmargin\labelsep  \usecounter{enumi}}
+ \def\newblock{\hskip .11em plus .33em minus -.07em}
+ \fussy  \sfcode`\.=1000\relax}
+\let\endthebibliography=\endlist
+
+%% 発表論文
+%%
+\def\theachievement#1{\chapter*{業績\@mkboth {業績}{業績}}
+ \refstepcounter{chapter}
+ \typeout{業績}
+ \addcontentsline{toc}{chapter}{業績}
+ \list
+ {[\arabic{enumi}]}{\settowidth\labelwidth{[#1]}\leftmargin\labelwidth
+ \advance\leftmargin\labelsep  \usecounter{enumi}}
+ \def\newblock{\hskip .11em plus .33em minus -.07em}
+ \fussy  \sfcode`\.=1000\relax}
+\let\endtheachievement=\endlist
+
+%% 付録
+%%
+\def\appendix{\par
+ \setcounter{chapterx}{0} \setcounter{section}{0}
+ \def\thechapter{付録\Alph{chapterx}}
+ \def\thesection{\Alph{chapterx}.\arabic{section}}
+ \def\@chapapp{\thechapter}
+ \def\@secapp{\thesection}}
+
+%% 図,表,プログラム(figure,table,program 環境)
+%%
+\def\fnum@figure{図 \thefigure}
+\def\fnum@table{表 \thetable}
+\newcounter{program}[chapter]
+\def\theprogram{\thechapter.\@arabic\c@program}
+\def\fps@program{tbp}
+\def\ftype@program{4}
+\def\ext@program{lop}
+\def\fnum@program{プログラム \theprogram}
+\def\program{\@float{program}}
+\let\endprogram\end@float
+\@namedef{program*}{\@dblfloat{program}}
+\@namedef{endprogram*}{\end@dblfloat}

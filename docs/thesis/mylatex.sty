@@ -1,0 +1,78 @@
+% My LaTeX Style tuned for LuaLaTeX + bxjsreport
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{mylatex}[2025/01/01 Custom settings for thesis template]
+
+%-------------------------------------------------
+% Common packages (minimal hard dependencies)
+%-------------------------------------------------
+\RequirePackage{ifthen}
+\RequirePackage{amsmath}
+\RequirePackage{amssymb}
+\RequirePackage{luatexja}
+\RequirePackage{luatexja-fontspec}
+\RequirePackage{graphicx}
+\RequirePackage{xcolor}
+\RequirePackage{url}
+\RequirePackage{float}
+\RequirePackage{listings}
+\RequirePackage{hyperref}
+
+% Optional packages (load only if available in the TeX installation)
+\IfFileExists{subcaption.sty}{\RequirePackage{subcaption}}{}
+\IfFileExists{threeparttable.sty}{\RequirePackage{threeparttable}}{}
+\IfFileExists{bxascmac.sty}{\RequirePackage{bxascmac}}{}
+\IfFileExists{bxokumacro.sty}{\RequirePackage{bxokumacro}}{}
+\IfFileExists{textpos.sty}{\RequirePackage[absolute,overlay]{textpos}}{}
+
+\hypersetup{%
+    hidelinks,
+    unicode=true,
+    pdfsubject={},
+    pdfauthor={},
+    pdfkeywords={}
+}
+
+%-------------------------------------------------
+% 表，図，式，プログラムの参照マクロ
+%-------------------------------------------------
+\def\figref{\@ifstar{\@Figref@}{\@figref@}}
+\def\@figref@#1{\@ifundefined{fig#1fig}{\textbf{図\ref{#1}}}{図\ref{#1}}%
+\global\@namedef{fig#1fig}{fig#1fig}}
+\def\@Figref@#1{図\ref{#1}}
+
+\def\tabref{\@ifstar{\@Tabref@}{\@tabref@}}
+\def\@tabref@#1{\@ifundefined{tab#1tab}{\textbf{表\ref{#1}}}{表\ref{#1}}%
+\global\@namedef{tab#1tab}{tab#1tab}}
+\def\@Tabref@#1{表\ref{#1}}
+
+\def\eqref{\@ifstar{\@Eqref@}{\@eqref@}}
+\def\@eqref@#1{\@ifundefined{eq#1eq}{\textbf{式\ref{#1}}}{式\ref{#1}}%
+\global\@namedef{eq#1eq}{eq#1eq}}
+\def\@Eqref@#1{式\ref{#1}}
+
+\def\pgref{\@ifstar{\@Pgref@}{\@pgref@}}
+\def\@pgref@#1{\@ifundefined{pg#1pg}{\textbf{プログラム\ref{#1}}}{プログラム\ref{#1}}%
+\global\@namedef{pg#1pg}{pg#1pg}}
+\def\@Pgref@#1{プログラム\ref{#1}}
+
+%-------------------------------------------------
+% listings の設定
+%-------------------------------------------------
+\lstset{
+ frame=single,
+ stringstyle={\ttfamily},
+ commentstyle={\itshape},
+ identifierstyle={\ttfamily},
+ keywordstyle={\ttfamily \bfseries},
+ basicstyle={\ttfamily \small},
+ breaklines=true,
+ xleftmargin=2zw,
+ xrightmargin=0zw,
+ framerule=.2pt,
+ numbers=none,
+ stepnumber=1,
+ numberstyle={\scriptsize},
+ numbersep=1em,
+ lineskip=-0.3zw,
+}

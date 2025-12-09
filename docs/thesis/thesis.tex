@@ -1,0 +1,65 @@
+\documentclass[a4paper,11pt,ja=standard,lualatex,openany]{bxjsreport}
+
+% 日本語・欧文のフォント設定（必要に応じて変更してください）
+\usepackage{luatexja-fontspec}
+\setmainjfont{IPAexMincho}
+\setsansjfont{IPAexGothic}
+
+% テンプレート用のスタイル
+\usepackage{mylatex}
+\usepackage{thesis-teu}
+\let\cleardoublepage\clearpage % 片面用に空白挿入を抑止
+
+% ヘッダ・フッタ
+\pagestyle{plain}
+
+% ===== メタデータを埋めてください =====
+\title{卒論題目のサンプル}
+% \longtitle{1行目}{2行目} % 題目を2行に分けたい場合はこちらを使用
+\idnum C0B22888
+\author{工科~~太郎}
+\advisor{指導~教員~~~教授}
+\date{2~0~2~5~年~2~月~X~X~日}
+\nendo 2025
+\lab{研究室名}
+\schoolofcs        % 学籍番号から専攻を自動設定
+
+\begin{document}
+
+% 外表紙
+\makecover
+
+% 内表紙
+\maketitle
+
+% 概要
+\jabst{\input{chapter/0_abstract}}
+\makejabstract
+
+% ページ設定
+\clearpage
+\pagenumbering{roman}
+\setcounter{page}{1}
+\thispagestyle{plain}
+
+% 目次・各種一覧
+\tableofcontents
+\listoffigures
+\listoftables
+% \listofprograms
+
+\pagenumbering{arabic}
+
+% 本文
+\input{chapter/1_preface}
+\input{chapter/2_related}
+\input{chapter/3_approach}
+\input{chapter/4_implementation}
+\input{chapter/5_evaluation}
+\input{chapter/6_conclusion}
+\input{chapter/98_ack}
+\input{chapter/99_bibliography}
+
+% \input{chapter/appendix} % 付録がある場合
+
+\end{document}

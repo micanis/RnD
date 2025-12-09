@@ -1,0 +1,4 @@
+# RnD project overview
+- Purpose: experimentation around human pose estimation and calibration utilities. Includes Sapiens pose estimation flow that runs detection and outputs visualized poses + JSON, camera calibration helper for fisheye images, and path utilities for data/experiments structure.
+- Tech stack: Python 3.10+, torch/torchvision, OpenCV (contrib), ultralytics (detector), huggingface-hub, tqdm, questionary CLI prompts.
+- Structure: `src/hpe/run_sapiens.py` (main pose-estimation runner), `src/utils/paths.py` (central paths/dataclass), `src/utils/select_target.py` (interactive bbox selector), `src/utils/sampling.py` (frame sampling helper), `src/tools/calibrate_fisheye.py` (fisheye calibration script). Data dirs expected under `data/`, outputs under `output/`/`tmp/`. Tests placeholder only (`tests/test.py` empty).
