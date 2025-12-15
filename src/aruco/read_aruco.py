@@ -1,101 +1,103 @@
-from __future__ import annotations
-
-import argparse
-from pathlib import Path
-
 import cv2
+import glob
+import os
+import numpy as np
 
+def main():
+    # ---------------------------------------------------------
+    # 設定：対象の画像ファイル名
+    # ---------------------------------------------------------
+    target_image_path = "test_img.jpg"  # ★ここを解析したい画像名に変えてください
+    
+    # ArUco検出器の準備 (4x4)
+    dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+    parameters = cv2.aruco.DetectorParameters()
+    detector = cv2.aruco.ArucoDetector(dictionary, parameters)
 
-def parse_args() -> argparse.Namespace:
-    root = Path(__file__).resolve().parent
-    parser = argparse.ArgumentParser(description="Detect ArUco markers and print their positions.")
-    parser.add_argument(
-        "--image",
-        type=Path,
-        required=True,
-        help="Path to the image in which to detect markers.",
-    )
-    parser.add_argument(
-        "--marker-tv",
-        type=Path,
-        default=root / "marker_00_TV.jpg",
-        help="Reference marker file (not used for detection, kept for traceability).",
-    )
-    parser.add_argument(
-        "--marker-ac",
-        type=Path,
-        default=root / "marker_01_AC.jpg",
-        help="Reference marker file (not used for detection, kept for traceability).",
-    )
-    parser.add_argument(
-        "--marker-light",
-        type=Path,
-        default=root / "marker_02_Light.jpg",
-        help="Reference marker file (not used for detection, kept for traceability).",
-    )
-    parser.add_argument(
-        "--dictionary",
-        type=str,
-        default="DICT_4X4_50",
-        help="OpenCV ArUco dictionary name (e.g., DICT_4X4_50, DICT_5X5_100, DICT_6X6_250).",
-    )
-    return parser.parse_args()
+    # ---------------------------------------------------------
+    # 手順1: 参照用画像から「IDと名前の対応表」を作る
+    # ---------------------------------------------------------
+    print("--- 参照マーカーの読み込み中 ---")
+    
+    # "marker_" で始まるjpgを探す
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    ref_images = glob.glob(os.path.join(base_dir, 'marker_*.jpg'))
+    
+    # { ID : "名前" } の辞書を作る
+    registered_objects = {}
 
+    for img_path in ref_images:
+        # ファイル名から名前部分を抽出 (marker_00_TV.jpg -> TV)
+        filename = os.path.basename(img_path)
+        # "_"で分割して3つ目(インデックス2)を取り、".jpg"を削除
+        # ファイル名が "marker_00_TV.jpg" 形式であることを想定
+        try:
+            obj_name = filename.split('_')[2].replace('.jpg', '')
+        except IndexError:
+            obj_name = filename # 形式が違う場合はファイル名そのまま
 
-def get_aruco_dictionary(name: str) -> cv2.aruco_Dictionary:
-    try:
-        aruco_module = cv2.aruco
-    except AttributeError as exc:
-        raise RuntimeError("cv2.aruco is not available; ensure opencv-contrib-python is installed.") from exc
+        # 画像を読み込んでIDを調べる
+        ref_img = cv2.imread(img_path)
+        if ref_img is None: continue
+        
+        gray_ref = cv2.cvtColor(ref_img, cv2.COLOR_BGR2GRAY)
+        corners, ids, _ = detector.detectMarkers(gray_ref)
 
-    dict_id = getattr(aruco_module, name, None)
-    if dict_id is None:
-        raise ValueError(f"Unknown ArUco dictionary: {name}")
-    return aruco_module.getPredefinedDictionary(dict_id)
+        if ids is not None:
+            marker_id = ids[0][0] # 最初の1個のIDを取得
+            registered_objects[marker_id] = obj_name
+            print(f"  登録完了: ID {marker_id} -> {obj_name}")
+        else:
+            print(f"  警告: {filename} からマーカーが見つかりませんでした")
 
+    print(f"  -> 合計 {len(registered_objects)} 個のマーカー情報を登録しました。\n")
 
-def detect_markers(image_path: Path, dictionary_name: str) -> list[dict]:
-    image = cv2.imread(str(image_path))
-    if image is None:
-        raise FileNotFoundError(f"Could not read image: {image_path}")
-
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    aruco_dict = get_aruco_dictionary(dictionary_name)
-    parameters = cv2.aruco.DetectorParameters_create()
-    corners, ids, _ = cv2.aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
-
-    results: list[dict] = []
-    if ids is None:
-        return results
-
-    for marker_id, marker_corners in zip(ids.flatten(), corners):
-        pts = marker_corners.reshape((4, 2))
-        center_x = float(pts[:, 0].mean())
-        center_y = float(pts[:, 1].mean())
-        results.append(
-            {
-                "id": int(marker_id),
-                "corners": pts.tolist(),  # [[x,y], ...] order: tl, tr, br, bl
-                "center": [center_x, center_y],
-            }
-        )
-    return results
-
-
-def main() -> None:
-    args = parse_args()
-    detections = detect_markers(args.image, args.dictionary)
-
-    if not detections:
-        print(f"No markers found in {args.image}")
+    # ---------------------------------------------------------
+    # 手順2: ターゲット画像(1枚)から位置を特定する
+    # ---------------------------------------------------------
+    print(f"--- 画像解析: {target_image_path} ---")
+    
+    scene_img = cv2.imread(target_image_path)
+    if scene_img is None:
+        print("エラー: ターゲット画像が見つかりません。")
         return
 
-    print(f"Image: {args.image}")
-    print(f"Reference markers: tv={args.marker_tv}, ac={args.marker_ac}, light={args.marker_light}")
-    for det in detections:
-        cx, cy = det["center"]
-        print(f"ID {det['id']:>3} center=({cx:.1f}, {cy:.1f}) corners={det['corners']}")
+    gray_scene = cv2.cvtColor(scene_img, cv2.COLOR_BGR2GRAY)
+    corners, ids, _ = detector.detectMarkers(gray_scene)
 
+    if ids is not None:
+        print(f"  検出されたマーカー総数: {len(ids)}\n")
+
+        # 検出されたIDごとにループ
+        for i, detected_id in enumerate(ids.flatten()):
+            detected_id = int(detected_id)
+            
+            # 中心座標の計算
+            pts = corners[i][0]
+            cx = int(np.mean(pts[:, 0]))
+            cy = int(np.mean(pts[:, 1]))
+
+            # 登録リストにあるか確認
+            if detected_id in registered_objects:
+                obj_name = registered_objects[detected_id]
+                print(f"  ★発見: [{obj_name}] (ID:{detected_id})")
+                print(f"    座標: ({cx}, {cy})")
+                
+                # 画像に名前を描画
+                label = f"{obj_name} ({cx},{cy})"
+                cv2.putText(scene_img, label, (cx, cy - 15),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+                # マーカーの枠を描画
+                cv2.aruco.drawDetectedMarkers(scene_img, corners, ids)
+            else:
+                print(f"  未登録のマーカー (ID:{detected_id}) が見つかりました 座標:({cx}, {cy})")
+    else:
+        print("  マーカーは検出されませんでした。")
+
+    # 結果表示
+    cv2.imshow('Result', scene_img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     main()
