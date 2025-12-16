@@ -2,15 +2,65 @@ import cv2
 import numpy as np
 import struct
 import os
+import sys
+from pathlib import Path
 
-def generate_high_quality_dual_spheres(img_path, xi, output_dir="output_hq_spheres"):
+import questionary
+
+try:
+    from src.utils.paths import PATHS
+    from src.utils.cli_select import select_hierarchy
+except ModuleNotFoundError:
+    PROJECT_ROOT = Path(__file__).resolve().parents[2]
+    SRC_DIR = PROJECT_ROOT / "src"
+    if str(SRC_DIR) not in sys.path:
+        sys.path.insert(0, str(SRC_DIR))
+    from utils.paths import PATHS
+    from utils.cli_select import select_hierarchy
+
+
+def find_default_experiment() -> Path:
+    candidates = sorted(p for p in PATHS.experiments.iterdir() if p.is_dir() and p.name.startswith("exp001"))
+    if not candidates:
+        raise RuntimeError(f"exp001* ディレクトリが見つかりません: {PATHS.experiments}")
+    return candidates[0]
+
+
+def select_input_image() -> Path:
+    frames_root = PATHS.interim / "frames"
+    fisheye_root = frames_root / "fisheye"
+    if not fisheye_root.exists():
+        raise FileNotFoundError(f"入力ディレクトリが見つかりません: {fisheye_root}")
+
+    condition_dir = select_hierarchy(
+        fisheye_root,
+        [
+            ("人物ディレクトリを選択してください:", lambda p: (d for d in p.iterdir() if d.is_dir())),
+            ("条件ディレクトリを選択してください:", lambda p: (d for d in p.iterdir() if d.is_dir())),
+            ("どちらの面を選択しますか:", lambda p: (d for d in p.iterdir() if d.is_dir()))
+        ],
+    )
+
+    images = sorted(condition_dir.glob("*.jpg"))
+    if not images:
+        raise FileNotFoundError(f"画像が見つかりません: {condition_dir}")
+
+    selection = questionary.select(
+        "入力画像を選択してください:",
+        choices=[questionary.Choice(str(p.relative_to(fisheye_root)), value=p) for p in images],
+    ).ask()
+    if selection is None:
+        raise RuntimeError("選択がキャンセルされました。")
+    return selection
+
+
+def generate_high_quality_dual_spheres(img_path, xi, output_dir: Path):
     """
     単眼魚眼画像のフル解像度データから、高速に「外側の球(q)」と「内側の球(s)」の
     バイナリPLYファイルを生成する。
     """
     # 出力ディレクトリ作成
     os.makedirs(output_dir, exist_ok=True)
-    print(f"Output directory: {output_dir}")
 
     # 1. 画像読み込み (フル解像度)
     img = cv2.imread(img_path)
@@ -18,7 +68,6 @@ def generate_high_quality_dual_spheres(img_path, xi, output_dir="output_hq_spher
         raise FileNotFoundError(f"Image not found: {img_path}")
     
     h, w = img.shape[:2]
-    print(f"Input Resolution: {w}x{h}")
 
     # 2. レンズパラメータ設定 (単眼中心)
     cx, cy = w / 2.0, h / 2.0
@@ -47,7 +96,6 @@ def generate_high_quality_dual_spheres(img_path, xi, output_dir="output_hq_spher
     colors = img[mask][:, [2, 1, 0]].astype(np.uint8)
     
     n_points = len(valid_r)
-    print(f"Processing {n_points} points (Vectorized)...")
 
     # --- 共通計算: 角度 ---
     valid_phi = np.arctan2(valid_dy, valid_dx)
@@ -96,13 +144,8 @@ def generate_high_quality_dual_spheres(img_path, xi, output_dir="output_hq_spher
     outer_filename = os.path.join(output_dir, "outer_sphere.ply")
     inner_filename = os.path.join(output_dir, "inner_sphere.ply")
 
-    print(f"Saving Outer Sphere (xi=0) to {outer_filename}...")
     save_ply_binary(outer_filename, points_outer, colors)
-    
-    print(f"Saving Inner Sphere (xi={xi}) to {inner_filename}...")
     save_ply_binary(inner_filename, points_inner, colors)
-    
-    print("Done!")
 
 def save_ply_binary(filename, points, colors):
     """
@@ -141,14 +184,9 @@ end_header
         # バイナリ一括書き込み
         f.write(vertices.tobytes())
 
-# --- 実行設定 ---
-# 180度分の正方形に近い魚眼画像を用意してください
-input_img = "test_img.jpg" 
-xi_param = 0.5 # DSモデルのパラメータ
-
-# 実行
-try:
-    # output_hq_spheres というフォルダに2つのファイルが生成されます
-    generate_high_quality_dual_spheres(input_img, xi_param)
-except Exception as e:
-    print(f"Error: {e}")
+if __name__ == "__main__":
+    xi_param = 0.5  # DSモデルのパラメータ
+    input_img = select_input_image()
+    exp_dir = find_default_experiment()
+    output_dir = exp_dir / "spheres"
+    generate_high_quality_dual_spheres(str(input_img), xi_param, output_dir)

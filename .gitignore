@@ -46,3 +46,4 @@ thesis-teu-tex25/
 # 研究
 data/
 *.ply
+*.json
