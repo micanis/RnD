@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.16.0/.schema/devbox.schema.json",
+
+  "packages": [
+    "uv@latest",
+    "basedpyright@latest",
+    "ruff@latest",
+    "bun@latest"
+  ],
+
+  "shell": {
+    "init_hook": [
+      "NU=\"$(command -v nu 2>/dev/null || true)\"",
+      "[ -z \"$NU\" ] && [ -x \"$HOME/.local/bin/nu\" ] && NU=\"$HOME/.local/bin/nu\"",
+      "if [ -z \"$DEVBOX_NU\" ] && [ -x \"$NU\" ]; then export DEVBOX_NU=1; exec \"$NU\"; fi"
+    ],
+    "scripts": {
+      "fmt": "ruff format .",
+      "lint": "ruff check ."
+    }
+  }
+}

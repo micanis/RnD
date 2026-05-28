@@ -1,0 +1,26 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+data/
+
+# General
+.DS_Store
+yolov8m.pt
+.env
+.envrc
+
+# slide specific
+/docs/slide/node_modules
+/docs/slide/dist
+/docs/slide/*.local
+/docs/slide/.vite-inspect
+/docs/slide/.remote-assets
+/docs/slide/components.d.ts
