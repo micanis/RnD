@@ -54,11 +54,13 @@ def convert_perspective_projection(video_path: Path, output_path: Path) -> None:
                 break
             frames[i] = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        root.attrs.update({
-            "source": video_path.name,
-            "fps": fps,
-            "total_frames": total_frames,
-        })
+        root.attrs.update(
+            {
+                "source": video_path.name,
+                "fps": fps,
+                "total_frames": total_frames,
+            }
+        )
 
         cap.release()
         store.close()
@@ -105,12 +107,14 @@ def convert_dual_fisheye(video_path: Path, output_path: Path) -> None:
             left[i] = frame_rgb[:, :half_width]
             right[i] = frame_rgb[:, half_width:]
 
-        root.attrs.update({
-            "source": video_path.name,
-            "fps": fps,
-            "total_frames": total_frames,
-            "frame_index": "temporal index, same across left and right",
-        })
+        root.attrs.update(
+            {
+                "source": video_path.name,
+                "fps": fps,
+                "total_frames": total_frames,
+                "frame_index": "temporal index, same across left and right",
+            }
+        )
 
         cap.release()
         store.close()
@@ -155,7 +159,11 @@ def main(ctx: typer.Context) -> None:
         typer.echo("No videos selected")
         raise typer.Exit(0)
 
-    convert_fn = convert_dual_fisheye if category == "dual_fisheye" else convert_perspective_projection
+    convert_fn = (
+        convert_dual_fisheye
+        if category == "dual_fisheye"
+        else convert_perspective_projection
+    )
     output_dir = PROCESSED_DIR / category
 
     for video_name in selected:

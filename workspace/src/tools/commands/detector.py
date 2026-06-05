@@ -236,7 +236,9 @@ def main(ctx: typer.Context) -> None:
         typer.echo("No files selected")
         raise typer.Exit(0)
 
-    model_path = str(DEFAULT_MODEL_PATH) if DEFAULT_MODEL_PATH.exists() else "yolov8n.pt"
+    model_path = (
+        str(DEFAULT_MODEL_PATH) if DEFAULT_MODEL_PATH.exists() else "yolov8n.pt"
+    )
     system = ZarrTrackingSystem(model_path=model_path)
 
     output_dir = PROCESSED_DETECT_DIR / category
@@ -244,7 +246,9 @@ def main(ctx: typer.Context) -> None:
 
     for zarr_name in selected:
         input_path = PROCESSED_IMAGE_DIR / category / zarr_name
-        output_path = output_dir / f"{Path(zarr_name).stem.replace('.zarr', '')}_detect.zarr"
+        output_path = (
+            output_dir / f"{Path(zarr_name).stem.replace('.zarr', '')}_detect.zarr"
+        )
 
         if output_path.exists():
             overwrite = questionary.confirm(

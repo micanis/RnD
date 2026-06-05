@@ -17,7 +17,7 @@ load_dotenv()
 
 app = typer.Typer(help="View Zarr image data frame by frame")
 
-PROJECT_ROOT = Path(os.getenv("PROJECT_ROOT", "."))
+PROJECT_ROOT = Path(os.getenv("PROJECT_ROOT", Path(__file__).resolve().parents[4]))
 PROCESSED_IMAGE_DIR = PROJECT_ROOT / "data" / "processed" / "image"
 PROCESSED_DETECT_DIR = PROJECT_ROOT / "data" / "processed" / "detect"
 PROCESSED_EXTRACT_DIR = PROJECT_ROOT / "data" / "processed" / "extract"
@@ -108,7 +108,9 @@ class ZarrViewer:
             side_label = ""
 
         # 人物リスト取得
-        person_names = sorted([k for k in detect_group.keys() if k.startswith("person")])
+        person_names = sorted(
+            [k for k in detect_group.keys() if k.startswith("person")]
+        )
         if not person_names:
             typer.echo("検出された人物がいません")
             return
@@ -160,12 +162,19 @@ class ZarrViewer:
                 cv2.rectangle(frame_bgr, (x1, y1), (x2, y2), color, 2)
                 label = f"ID:{pid} {conf:.2f}"
                 cv2.putText(
-                    frame_bgr, label, (x1, y1 - 5),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1
+                    frame_bgr,
+                    label,
+                    (x1, y1 - 5),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.5,
+                    color,
+                    1,
                 )
 
             mode_str = "overlay" if self.detect_mode == "overlay" else "bbox"
-            title = f"{side_label}Frame {self.frame_idx + 1}/{total_frames} [{mode_str}]"
+            title = (
+                f"{side_label}Frame {self.frame_idx + 1}/{total_frames} [{mode_str}]"
+            )
             key = self._show_frame(frame_bgr, title)
 
             if key == ord("q"):
@@ -175,7 +184,9 @@ class ZarrViewer:
             elif self._is_left_key(key):
                 self.frame_idx = max(self.frame_idx - 1, 0)
             elif key == ord("m"):
-                self.detect_mode = "bbox_only" if self.detect_mode == "overlay" else "overlay"
+                self.detect_mode = (
+                    "bbox_only" if self.detect_mode == "overlay" else "overlay"
+                )
             elif key == ord("s"):
                 self._save_frame(frame_bgr, f"detect_{self.frame_idx:04d}")
             elif key == ord("+") or key == ord("="):
@@ -201,7 +212,9 @@ class ZarrViewer:
             extract_group = root
             side_label = ""
 
-        person_names = sorted([k for k in extract_group.keys() if k.startswith("person")])
+        person_names = sorted(
+            [k for k in extract_group.keys() if k.startswith("person")]
+        )
         if not person_names:
             typer.echo("抽出された人物がいません")
             return
@@ -236,7 +249,9 @@ class ZarrViewer:
                 self.person_idx = (self.person_idx + 1) % len(person_names)
                 self.frame_idx = 0
             elif key == ord("s"):
-                self._save_frame(frame_bgr, f"extract_{person_name}_{self.frame_idx:04d}")
+                self._save_frame(
+                    frame_bgr, f"extract_{person_name}_{self.frame_idx:04d}"
+                )
             elif key == ord("+") or key == ord("="):
                 self.zoom = min(self.zoom * 1.2, 5.0)
             elif key == ord("-"):
@@ -285,9 +300,9 @@ class ZarrViewer:
     def _get_color(self, idx: int) -> tuple[int, int, int]:
         """ID別の色を取得"""
         colors = [
-            (0, 255, 0),    # green
-            (255, 0, 0),    # blue
-            (0, 0, 255),    # red
+            (0, 255, 0),  # green
+            (255, 0, 0),  # blue
+            (0, 0, 255),  # red
             (255, 255, 0),  # cyan
             (255, 0, 255),  # magenta
             (0, 255, 255),  # yellow
@@ -378,7 +393,9 @@ def main(ctx: typer.Context) -> None:
     elif data_type == "detect":
         # 対応するimage.zarrを探す
         stem = Path(selected).stem.replace("_detect", "").replace(".zarr", "")
-        image_candidates = list((PROCESSED_IMAGE_DIR / category).glob(f"{stem}*.zarr.zip"))
+        image_candidates = list(
+            (PROCESSED_IMAGE_DIR / category).glob(f"{stem}*.zarr.zip")
+        )
 
         image_path = None
         if image_candidates:

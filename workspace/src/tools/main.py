@@ -5,6 +5,7 @@ app = typer.Typer(help="RnD CLI Tools")
 app.add_typer(video2img.app, name="video2img")
 app.add_typer(detector.app, name="detect")
 app.add_typer(extract.app, name="extract")
+app.add_typer(viewer.app, name="preview")
 app.add_typer(viewer.app, name="view")
 
 if __name__ == "__main__":

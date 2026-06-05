@@ -82,7 +82,9 @@ def _process_single(
 
     for person_name in tqdm(person_groups, desc="Extracting persons"):
         person_detect = detect_root[person_name]
-        coords = person_detect["coords"][:].astype(np.float32)  # (N, 6): [frame, x1, y1, x2, y2, conf]
+        coords = person_detect["coords"][:].astype(
+            np.float32
+        )  # (N, 6): [frame, x1, y1, x2, y2, conf]
 
         n_frames = len(coords)
 
