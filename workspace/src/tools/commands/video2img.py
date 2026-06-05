@@ -1,5 +1,4 @@
 import os
-import shutil
 import tempfile
 from pathlib import Path
 
@@ -15,7 +14,7 @@ load_dotenv()
 
 app = typer.Typer(help="Convert video files to Zarr ZipStore format")
 
-PROJECT_ROOT = Path(os.getenv("PROJECT_ROOT", "."))
+PROJECT_ROOT = Path(os.getenv("PROJECT_ROOT", Path(__file__).resolve().parents[4]))
 RAW_DIR = PROJECT_ROOT / "data" / "raw"
 PROCESSED_DIR = PROJECT_ROOT / "data" / "processed" / "image"
 

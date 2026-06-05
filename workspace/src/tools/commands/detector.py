@@ -19,10 +19,10 @@ load_dotenv()
 
 app = typer.Typer(help="Detect and track persons in Zarr video data")
 
-PROJECT_ROOT = Path(os.getenv("PROJECT_ROOT", "."))
+PROJECT_ROOT = Path(os.getenv("PROJECT_ROOT", Path(__file__).resolve().parents[4]))
 PROCESSED_IMAGE_DIR = PROJECT_ROOT / "data" / "processed" / "image"
 PROCESSED_DETECT_DIR = PROJECT_ROOT / "data" / "processed" / "detect"
-DEFAULT_MODEL_PATH = PROJECT_ROOT / "yolov8m.pt"
+DEFAULT_MODEL_PATH = PROJECT_ROOT / "models" / "yolov8m.pt"
 
 SideOption = Literal["left", "right", "both", "frames"]
 

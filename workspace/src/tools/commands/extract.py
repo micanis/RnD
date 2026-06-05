@@ -17,7 +17,7 @@ load_dotenv()
 
 app = typer.Typer(help="Extract perspective-corrected views for each detected person")
 
-PROJECT_ROOT = Path(os.getenv("PROJECT_ROOT", "."))
+PROJECT_ROOT = Path(os.getenv("PROJECT_ROOT", Path(__file__).resolve().parents[4]))
 PROCESSED_IMAGE_DIR = PROJECT_ROOT / "data" / "processed" / "image"
 PROCESSED_DETECT_DIR = PROJECT_ROOT / "data" / "processed" / "detect"
 PROCESSED_EXTRACT_DIR = PROJECT_ROOT / "data" / "processed" / "extract"

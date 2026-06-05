@@ -1,23 +1,44 @@
+# OS/editor files
+.DS_Store
+
+# Local environment and secrets
+.env
+.envrc
+
+# Devbox-generated files
+.devbox/
+
 # Python-generated files
 __pycache__/
 *.py[oc]
+.ruff_cache/
 build/
 dist/
 wheels/
 *.egg-info
 
-# Virtual environments
-.venv
+# Python local environments and caches
+.venv/
+.uv-cache/
 
+# R&D data and generated workspace artifacts
 data/
+tmp/
+workspace/tmp/
 
-# General
-.DS_Store
-yolov8m.pt
-.env
-.envrc
+# Model artifacts
+*.pt
+*.pth
+*.onnx
+*.engine
+*.safetensors
 
-# slide specific
+# Apptainer generated files
+*.sif
+*.simg
+*.sqsh
+
+# Slide project generated files
 /docs/slide/node_modules
 /docs/slide/dist
 /docs/slide/*.local
