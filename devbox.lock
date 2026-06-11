@@ -1,6 +1,34 @@
 {
   "lockfile_version": "1",
   "packages": {
+    "apptainer@latest": {
+      "last_modified": "2026-05-27T10:28:13Z",
+      "resolved": "github:NixOS/nixpkgs/4100e830e085863741bc69b156ec4ccd53ab5be0#apptainer",
+      "source": "devbox-search",
+      "version": "1.5.0",
+      "systems": {
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/z9cgfqsq9z0cdjdzibxbl4jh5xsksxhg-apptainer-1.5.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/z9cgfqsq9z0cdjdzibxbl4jh5xsksxhg-apptainer-1.5.0"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/ir0s44s0jrg8gkgaqgcyfbg7n4hqszlx-apptainer-1.5.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/ir0s44s0jrg8gkgaqgcyfbg7n4hqszlx-apptainer-1.5.0"
+        }
+      }
+    },
     "basedpyright@latest": {
       "last_modified": "2026-05-03T08:31:49Z",
       "resolved": "github:NixOS/nixpkgs/90c100cb48d61a0316b9479bb03f1be36d34b92a#basedpyright",
