@@ -1,0 +1,57 @@
+{
+  "image": "/Users/micanis/RnD/workspace/experiments/best_model_with_person_detected/images/real_test2_000.jpg",
+  "width": 1920,
+  "height": 1920,
+  "inference_ms": 143.29566701781005,
+  "detections": [
+    {
+      "label": "person",
+      "class_id": 0,
+      "confidence": 0.8898850083351135,
+      "bbox_xyxy": [
+        521.385009765625,
+        363.2575378417969,
+        723.8311767578125,
+        606.4854125976562
+      ]
+    },
+    {
+      "label": "person",
+      "class_id": 0,
+      "confidence": 0.7754893898963928,
+      "bbox_xyxy": [
+        1492.2835693359375,
+        596.4202880859375,
+        1708.830322265625,
+        890.535888671875
+      ]
+    },
+    {
+      "label": "person",
+      "class_id": 0,
+      "confidence": 0.6660385727882385,
+      "bbox_xyxy": [
+        197.72254943847656,
+        518.7677001953125,
+        375.0222473144531,
+        848.0447998046875
+      ]
+    },
+    {
+      "label": "person",
+      "class_id": 0,
+      "confidence": 0.2935087978839874,
+      "bbox_xyxy": [
+        1221.6473388671875,
+        670.733154296875,
+        1386.198486328125,
+        819.7914428710938
+      ]
+    }
+  ],
+  "model": "YOLO",
+  "model_path": "/Users/micanis/RnD/models/yolov8m.pt",
+  "model_size_mb": 49.72160720825195,
+  "rendered_image": "/Users/micanis/RnD/workspace/experiments/best_model_with_person_detected/outputs/yolo/real_test2_000_yolo.jpg",
+  "detections_json": "/Users/micanis/RnD/workspace/experiments/best_model_with_person_detected/outputs/yolo/real_test2_000_yolo.json"
+}
