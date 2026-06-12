@@ -1,46 +1,35 @@
 {
-  "image": "/Users/micanis/RnD/workspace/experiments/best_model_with_person_detected/images/cepdof_lunch1_0500.jpg",
+  "image": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/images/cepdof_lunch1_0500.jpg",
   "width": 2048,
   "height": 2048,
-  "inference_ms": 215.98375000758097,
+  "inference_ms": 956.7216522991657,
   "detections": [
     {
       "label": "person",
       "class_id": 0,
-      "confidence": 0.9385251402854919,
+      "confidence": 0.9502164721488953,
       "bbox_xyxy": [
-        679.2525024414062,
-        351.5826110839844,
-        1155.8756103515625,
-        762.794921875
+        685.8229370117188,
+        347.7679138183594,
+        1105.5809326171875,
+        760.9586791992188
       ]
     },
     {
       "label": "person",
       "class_id": 0,
-      "confidence": 0.9010843634605408,
+      "confidence": 0.9407562613487244,
       "bbox_xyxy": [
-        1161.912109375,
-        610.5836181640625,
-        1542.629638671875,
-        997.16650390625
-      ]
-    },
-    {
-      "label": "person",
-      "class_id": 0,
-      "confidence": 0.3108677566051483,
-      "bbox_xyxy": [
-        1491.760498046875,
-        523.3773193359375,
-        1650.922607421875,
-        659.8292846679688
+        1162.2586669921875,
+        610.1670532226562,
+        1543.9544677734375,
+        999.3487548828125
       ]
     }
   ],
   "model": "YOLO",
-  "model_path": "/Users/micanis/RnD/models/yolov8m.pt",
-  "model_size_mb": 49.72160720825195,
-  "rendered_image": "/Users/micanis/RnD/workspace/experiments/best_model_with_person_detected/outputs/yolo/cepdof_lunch1_0500_yolo.jpg",
-  "detections_json": "/Users/micanis/RnD/workspace/experiments/best_model_with_person_detected/outputs/yolo/cepdof_lunch1_0500_yolo.json"
+  "model_path": "yolo26m.pt",
+  "model_size_mb": 42.20552921295166,
+  "rendered_image": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/outputs/yolo/cepdof_lunch1_0500_yolo.jpg",
+  "detections_json": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/outputs/yolo/cepdof_lunch1_0500_yolo.json"
 }

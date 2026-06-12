@@ -46,7 +46,9 @@ def draw_detections(image_bgr, detections: list[dict[str, Any]]) -> None:
         )
 
 
-def detect_one(model: YOLO, image_path: Path, confidence_threshold: float) -> dict[str, Any]:
+def detect_one(
+    model: YOLO, image_path: Path, confidence_threshold: float
+) -> dict[str, Any]:
     image_bgr = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
     if image_bgr is None:
         raise ValueError(f"failed to read image: {image_path}")
@@ -100,7 +102,9 @@ def write_result(result: dict[str, Any], output_dir: Path) -> dict[str, Any]:
 
     result["rendered_image"] = str(rendered_path)
     result["detections_json"] = str(json_path)
-    json_path.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    json_path.write_text(
+        json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     return result
 
 
