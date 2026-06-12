@@ -10,9 +10,8 @@
 ## 評価指標
 
 1. 検出精度 - 検出対象の人物を正しく検出できているか
-2. 領域一致度 - Ground Truth と検出領域がどの程度重なっているか
-3. 推論速度 - 実環境で必要な処理速度を満たせるか
-4. モデルサイズ - 配置先の計算資源に収まるか
+2. 推論速度 - 実環境で必要な処理速度を満たせるか
+3. モデルサイズ - 配置先の計算資源に収まるか
 
 ## 比較対象モデル
 
@@ -24,6 +23,7 @@
 - CEPDOF: `data/raw/CEPDOF/Lunch1` の 0-based 500 フレーム目
 - 実環境: `data/processed/image/dual_fisheye/test2.zarr.zip` の `right[0]`
 - YOLO: `yolo26m.pt`, `yolo11m.pt`, `models/yolov8m.pt`
+- Ultralytics: `8.4.64`
 - RAPiD: `workspace/src/RAPiD/weights/pL1_MWHB1024_Mar11_4000.ckpt`
 - RAPiD bbox 形式: `[center_x, center_y, width, height, angle, confidence]`
 - 推論速度はモデルロード直後の初回実行を含めず、ウォームアップ後の複数回推論の平均値で比較する。
@@ -46,21 +46,21 @@ uv run rapid.py \
 
 | モデル | 画像 | 検出数 | 推論時間 | モデルサイズ | 出力 |
 | --- | --- | ---: | ---: | ---: | --- |
-| YOLO26m | `cepdof_lunch1_0500.jpg` | 2 | 再測定待ち | 42.2 MB | `outputs/yolo/yolo26m/cepdof_lunch1_0500_yolo26m.jpg` |
-| YOLO26m | `real_test2_000.jpg` | 2 | 再測定待ち | 42.2 MB | `outputs/yolo/yolo26m/real_test2_000_yolo26m.jpg` |
-| YOLO11m | `cepdof_lunch1_0500.jpg` | 再測定待ち | 再測定待ち | 再測定待ち | `outputs/yolo/yolo11m/cepdof_lunch1_0500_yolo11m.jpg` |
-| YOLO11m | `real_test2_000.jpg` | 再測定待ち | 再測定待ち | 再測定待ち | `outputs/yolo/yolo11m/real_test2_000_yolo11m.jpg` |
-| YOLOv8m | `cepdof_lunch1_0500.jpg` | 再測定待ち | 再測定待ち | 49.7 MB | `outputs/yolo/yolov8m/cepdof_lunch1_0500_yolov8m.jpg` |
-| YOLOv8m | `real_test2_000.jpg` | 再測定待ち | 再測定待ち | 49.7 MB | `outputs/yolo/yolov8m/real_test2_000_yolov8m.jpg` |
-| RAPiD | `cepdof_lunch1_0500.jpg` | 2 | 229.6 ms | 235.0 MB | `outputs/rapid/cepdof_lunch1_0500_rapid.jpg` |
-| RAPiD | `real_test2_000.jpg` | 2 | 46.3 ms | 235.0 MB | `outputs/rapid/real_test2_000_rapid.jpg` |
+| YOLO26m | `cepdof_lunch1_0500.jpg` | 2 | 6.4 ms | 42.2 MB | `outputs/yolo/yolo26m/cepdof_lunch1_0500_yolo26m.jpg` |
+| YOLO26m | `real_test2_000.jpg` | 2 | 6.3 ms | 42.2 MB | `outputs/yolo/yolo26m/real_test2_000_yolo26m.jpg` |
+| YOLO11m | `cepdof_lunch1_0500.jpg` | 2 | 6.1 ms | 38.8 MB | `outputs/yolo/yolo11m/cepdof_lunch1_0500_yolo11m.jpg` |
+| YOLO11m | `real_test2_000.jpg` | 2 | 6.2 ms | 38.8 MB | `outputs/yolo/yolo11m/real_test2_000_yolo11m.jpg` |
+| YOLOv8m | `cepdof_lunch1_0500.jpg` | 3 | 5.2 ms | 49.7 MB | `outputs/yolo/yolov8m/cepdof_lunch1_0500_yolov8m.jpg` |
+| YOLOv8m | `real_test2_000.jpg` | 4 | 5.2 ms | 49.7 MB | `outputs/yolo/yolov8m/real_test2_000_yolov8m.jpg` |
+| RAPiD | `cepdof_lunch1_0500.jpg` | 2 | 49.0 ms | 235.0 MB | `outputs/rapid/cepdof_lunch1_0500_rapid.jpg` |
+| RAPiD | `real_test2_000.jpg` | 2 | 45.4 ms | 235.0 MB | `outputs/rapid/real_test2_000_rapid.jpg` |
 
 | モデル | 平均検出数 | 平均推論時間 | モデルサイズ |
 | --- | ---: | ---: | ---: |
-| YOLO26m | 2.0 | 再測定待ち | 42.2 MB |
-| YOLO11m | 再測定待ち | 再測定待ち | 再測定待ち |
-| YOLOv8m | 再測定待ち | 再測定待ち | 49.7 MB |
-| RAPiD | 2.0 | 138.0 ms | 235.0 MB |
+| YOLO26m | 2.0 | 6.4 ms | 42.2 MB |
+| YOLO11m | 2.0 | 6.2 ms | 38.8 MB |
+| YOLOv8m | 3.5 | 5.2 ms | 49.7 MB |
+| RAPiD | 2.0 | 47.2 ms | 235.0 MB |
 
 ## 評価
 
@@ -68,11 +68,13 @@ uv run rapid.py \
 
 今回の2枚の評価では Ground Truth bbox を用意していないため、厳密な Precision / Recall / IoU は算出していない。検出数と confidence、および描画結果の目視確認をもとに比較する。
 
-- YOLO26m は初回測定では CEPDOF と実環境の両方で 2 件を検出した。
-- YOLO11m と YOLOv8m はウォームアップ除外後の再測定で確認する。
+- YOLO26m は CEPDOF と実環境の両方で 2 件を検出した。
+- YOLO11m は CEPDOF と実環境の両方で 2 件を検出した。
+- YOLOv8m は CEPDOF で 3 件、実環境で 4 件を検出した。
 - RAPiD は CEPDOF と実環境の両方で 2 件を検出した。
 - RAPiD の検出 confidence は高く、CEPDOF では `0.990`, `0.932`、実環境では `0.991`, `0.919` だった。
 - YOLO26m も高 confidence の検出に絞られており、CEPDOF では `0.950`, `0.941`、実環境では `0.912`, `0.706` だった。
+- YOLOv8m は低 confidence の候補も含めて多く検出し、実環境では `0.293` の検出も含まれた。
 
 ### 領域一致度
 
@@ -82,18 +84,23 @@ uv run rapid.py \
 
 ### 推論速度
 
-- 旧測定ではモデルロード後の初回推論が含まれていたため、速度比較から除外する。
-- 修正版の実験コードでは `warmup_runs` 後に `measure_runs` 回推論し、平均値、中央値、最小値、各回の測定値を JSON に保存する。
-- YOLO は `yolo26m.pt`, `yolo11m.pt`, `models/yolov8m.pt` を同一条件で測定し、バージョン差異を比較する。
+- YOLO 系は全体的に RAPiD より高速だった。
+- 平均推論時間は YOLOv8m が `5.2 ms`、YOLO11m が `6.2 ms`、YOLO26m が `6.4 ms`、RAPiD が `47.2 ms` だった。
+- RAPiD は YOLO 系より約 7.4 - 9.1 倍遅い。
+- YOLO 系の世代差は小さいが、この2枚では YOLOv8m が最速かつ検出数が最多だった。
 
 ### モデルサイズ
 
 - YOLO26m は `42.2 MB`。
+- YOLO11m は `38.8 MB`。
+- YOLOv8m は `49.7 MB`。
 - RAPiD は `235.0 MB`。
-- 配置先のストレージやメモリ制約を重視する場合は YOLO26m の方が扱いやすい。
+- 配置先のストレージやメモリ制約を重視する場合は YOLO 系の方が扱いやすい。
 
 ## 結論
 
-現時点では、魚眼画像の人物領域を安定して扱う候補として RAPiD を優先する。理由は、魚眼画像に合わせた rotated bbox を出力でき、CEPDOF と実環境の両方で高 confidence の人物検出ができたためである。
+魚眼画像の人物領域をより正確に表現したい場合は RAPiD を優先する。理由は、魚眼画像に合わせた rotated bbox を出力でき、CEPDOF と実環境の両方で高 confidence の人物検出ができたためである。
 
-一方で、RAPiD はモデルサイズが大きい。YOLO 系はモデルサイズが小さく、最新世代では検出 confidence も高いため、軽量な配置や高速処理を優先する用途では YOLO26m / YOLO11m / YOLOv8m のバージョン差異を確認してから最終候補を選ぶ。最終判断には Ground Truth bbox を用意し、IoU、Precision、Recall を追加で評価する必要がある。
+一方で、実環境での速度、モデルサイズ、実装の扱いやすさを重視する場合は YOLO 系が有利である。今回の2枚では YOLOv8m が最速かつ検出数も最も多かった。YOLO26m と YOLO11m は検出数が RAPiD と同じで、confidence も高く、RAPiD より大幅に高速だった。
+
+実運用候補としては、rotated bbox が必須なら RAPiD、axis-aligned bbox で十分なら YOLOv8m または YOLO26m を優先する。最終判断には Ground Truth bbox を用意し、IoU、Precision、Recall を追加で評価する必要がある。
