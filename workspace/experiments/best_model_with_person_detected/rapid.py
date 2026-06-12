@@ -77,6 +77,10 @@ def to_jsonable(value: Any) -> Any:
         return value.tolist()
     if isinstance(value, np.generic):
         return value.item()
+    if hasattr(value, "detach") and hasattr(value, "cpu"):
+        return to_jsonable(value.detach().cpu().numpy())
+    if hasattr(value, "tolist") and not isinstance(value, (str, bytes)):
+        return value.tolist()
     if isinstance(value, dict):
         return {str(key): to_jsonable(item) for key, item in value.items()}
     if isinstance(value, (list, tuple)):
@@ -89,6 +93,8 @@ def count_detections(detections: Any) -> int:
         return 0
     if isinstance(detections, np.ndarray):
         return int(len(detections))
+    if hasattr(detections, "detach") and hasattr(detections, "cpu"):
+        return count_detections(detections.detach().cpu().numpy())
     if isinstance(detections, dict):
         for key in ("detections", "boxes", "bboxes", "bbox"):
             if key in detections:
