@@ -41,27 +41,24 @@ def write_jpg(image_bgr: np.ndarray, output_path: Path) -> None:
 def export_cepdof_images(
     cepdof_images: Iterable[Path],
     output_dir: Path,
-    count: int,
+    frame_index: int,
     cepdof_dir: Path,
 ) -> list[Path]:
-    selected = list(cepdof_images)[:count]
-    if len(selected) < count:
+    images = list(cepdof_images)
+    if len(images) <= frame_index:
         raise FileNotFoundError(
-            f"CEPDOF images must be at least {count}, "
-            f"but found {len(selected)} under {cepdof_dir}"
+            f"CEPDOF frame index {frame_index} is unavailable; "
+            f"found {len(images)} images under {cepdof_dir}"
         )
 
-    output_paths: list[Path] = []
-    for index, source_path in enumerate(selected):
-        image_bgr = cv2.imread(str(source_path), cv2.IMREAD_COLOR)
-        if image_bgr is None:
-            raise ValueError(f"failed to read CEPDOF image: {source_path}")
+    source_path = images[frame_index]
+    image_bgr = cv2.imread(str(source_path), cv2.IMREAD_COLOR)
+    if image_bgr is None:
+        raise ValueError(f"failed to read CEPDOF image: {source_path}")
 
-        output_path = output_dir / f"cepdof_{index:03d}.jpg"
-        write_jpg(image_bgr, output_path)
-        output_paths.append(output_path)
-
-    return output_paths
+    output_path = output_dir / f"cepdof_lunch1_{frame_index:04d}.jpg"
+    write_jpg(image_bgr, output_path)
+    return [output_path]
 
 
 def read_real_first_frame(zarr_path: Path) -> np.ndarray:
@@ -92,7 +89,7 @@ def export_real_first_frame(zarr_path: Path, output_dir: Path) -> Path:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Export 5 CEPDOF/RAPiD images and the first real-environment "
+            "Export one CEPDOF/RAPiD image and the first real-environment "
             "right frame as jpg files."
         )
     )
@@ -121,10 +118,10 @@ def parse_args() -> argparse.Namespace:
         help="subset to export",
     )
     parser.add_argument(
-        "--cepdof-count",
+        "--cepdof-frame-index",
         type=int,
-        default=5,
-        help="number of CEPDOF images to export",
+        default=500,
+        help="0-based CEPDOF Lunch1 frame index to export",
     )
     return parser.parse_args()
 
@@ -140,7 +137,7 @@ def main() -> None:
             export_cepdof_images(
                 cepdof_images=cepdof_images,
                 output_dir=args.output_dir,
-                count=args.cepdof_count,
+                frame_index=args.cepdof_frame_index,
                 cepdof_dir=args.cepdof_dir,
             )
         )
