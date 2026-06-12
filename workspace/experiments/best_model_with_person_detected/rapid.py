@@ -8,6 +8,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 from PIL import Image
 
 
@@ -71,24 +72,65 @@ def make_detector(
     )
 
 
+def to_jsonable(value: Any) -> Any:
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, np.generic):
+        return value.item()
+    if isinstance(value, dict):
+        return {str(key): to_jsonable(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [to_jsonable(item) for item in value]
+    return value
+
+
+def count_detections(detections: Any) -> int:
+    if detections is None:
+        return 0
+    if isinstance(detections, np.ndarray):
+        return int(len(detections))
+    if isinstance(detections, dict):
+        for key in ("detections", "boxes", "bboxes", "bbox"):
+            if key in detections:
+                return count_detections(detections[key])
+        return len(detections)
+    if isinstance(detections, (list, tuple)):
+        return len(detections)
+    return 1
+
+
 def detect_one(detector: Any, image_path: Path, output_dir: Path) -> dict[str, Any]:
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / f"{image_path.stem}_rapid.jpg"
+    json_path = output_dir / f"{image_path.stem}_rapid.json"
 
     start = time.perf_counter()
-    result = detector.detect_one(
+    detections = detector.detect_one(
         img_path=str(image_path),
-        return_img=True,
+        return_img=False,
     )
     elapsed_ms = (time.perf_counter() - start) * 1000
 
-    Image.fromarray(result).save(output_path)
-    return {
+    rendered = detector.detect_one(
+        img_path=str(image_path),
+        return_img=True,
+    )
+
+    Image.fromarray(rendered).save(output_path)
+    result = {
         "model": "RAPiD",
         "image": str(image_path),
         "rendered_image": str(output_path),
+        "detections_json": str(json_path),
         "inference_ms": elapsed_ms,
+        "num_detections": count_detections(detections),
+        "detections": to_jsonable(detections),
     }
+    json_path.write_text(
+        json.dumps(result, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    return result
 
 
 def parse_args() -> argparse.Namespace:
@@ -100,7 +142,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--rapid-dir", type=Path, default=DEFAULT_RAPID_DIR)
     parser.add_argument("--weights", type=Path, default=DEFAULT_WEIGHTS_PATH)
     parser.add_argument("--input-size", type=int, default=1024)
-    parser.add_argument("--conf", type=float, default=0.5)
+    parser.add_argument("--conf", type=float, default=0.3)
     parser.add_argument("--cpu", action="store_true", help="disable CUDA")
     return parser.parse_args()
 
