@@ -4,7 +4,6 @@
     "image": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/images/cepdof_lunch1_0500.jpg",
     "rendered_image": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/outputs/rapid/cepdof_lunch1_0500_rapid.jpg",
     "detections_json": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/outputs/rapid/cepdof_lunch1_0500_rapid.json",
-    "inference_ms": 229.5527122914791,
     "num_detections": 2,
     "detections": [
       [
@@ -24,15 +23,26 @@
         0.9324036240577698
       ]
     ],
+    "inference_ms": 48.958563432097435,
+    "inference_ms_median": 45.738475397229195,
+    "inference_ms_min": 44.77899149060249,
+    "inference_ms_runs": [
+      63.52544389665127,
+      44.77899149060249,
+      44.96441408991814,
+      45.78549228608608,
+      45.738475397229195
+    ],
     "weights_path": "/home/yamanaka/RnD/workspace/src/RAPiD/weights/pL1_MWHB1024_Mar11_4000.ckpt",
-    "model_size_mb": 235.00089645385742
+    "model_size_mb": 235.00089645385742,
+    "warmup_runs": 2,
+    "measure_runs": 5
   },
   {
     "model": "RAPiD",
     "image": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/images/real_test2_000.jpg",
     "rendered_image": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/outputs/rapid/real_test2_000_rapid.jpg",
     "detections_json": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/outputs/rapid/real_test2_000_rapid.json",
-    "inference_ms": 46.27786763012409,
     "num_detections": 2,
     "detections": [
       [
@@ -52,7 +62,19 @@
         0.9188754558563232
       ]
     ],
+    "inference_ms": 45.44302299618721,
+    "inference_ms_median": 45.084159821271896,
+    "inference_ms_min": 43.88272762298584,
+    "inference_ms_runs": [
+      43.88272762298584,
+      46.40396498143673,
+      44.73710060119629,
+      45.084159821271896,
+      47.107161954045296
+    ],
     "weights_path": "/home/yamanaka/RnD/workspace/src/RAPiD/weights/pL1_MWHB1024_Mar11_4000.ckpt",
-    "model_size_mb": 235.00089645385742
+    "model_size_mb": 235.00089645385742,
+    "warmup_runs": 2,
+    "measure_runs": 5
   }
 ]

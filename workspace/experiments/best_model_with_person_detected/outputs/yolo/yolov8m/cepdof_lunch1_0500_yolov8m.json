@@ -1,0 +1,59 @@
+{
+  "image": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/images/cepdof_lunch1_0500.jpg",
+  "width": 2048,
+  "height": 2048,
+  "detections": [
+    {
+      "label": "person",
+      "class_id": 0,
+      "confidence": 0.9385658502578735,
+      "bbox_xyxy": [
+        679.2091064453125,
+        351.54571533203125,
+        1155.9036865234375,
+        762.84033203125
+      ]
+    },
+    {
+      "label": "person",
+      "class_id": 0,
+      "confidence": 0.9012233018875122,
+      "bbox_xyxy": [
+        1161.859619140625,
+        610.5098876953125,
+        1542.6219482421875,
+        997.1661987304688
+      ]
+    },
+    {
+      "label": "person",
+      "class_id": 0,
+      "confidence": 0.3104160726070404,
+      "bbox_xyxy": [
+        1491.763671875,
+        523.3731079101562,
+        1650.923095703125,
+        659.820556640625
+      ]
+    }
+  ],
+  "inference_ms": 5.2490729838609695,
+  "inference_ms_median": 5.2596814930438995,
+  "inference_ms_min": 5.045715719461441,
+  "inference_ms_runs": [
+    5.4574161767959595,
+    5.26590459048748,
+    5.2596814930438995,
+    5.2166469395160675,
+    5.045715719461441
+  ],
+  "model": "YOLO",
+  "model_variant": "yolov8m",
+  "model_path": "models/yolov8m.pt",
+  "model_size_mb": 49.72160720825195,
+  "ultralytics_version": "8.4.64",
+  "warmup_runs": 2,
+  "measure_runs": 5,
+  "rendered_image": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/outputs/yolo/yolov8m/cepdof_lunch1_0500_yolov8m.jpg",
+  "detections_json": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/outputs/yolo/yolov8m/cepdof_lunch1_0500_yolov8m.json"
+}

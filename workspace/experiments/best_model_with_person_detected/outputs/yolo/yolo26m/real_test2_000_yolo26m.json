@@ -1,0 +1,48 @@
+{
+  "image": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/images/real_test2_000.jpg",
+  "width": 1920,
+  "height": 1920,
+  "detections": [
+    {
+      "label": "person",
+      "class_id": 0,
+      "confidence": 0.9122782349586487,
+      "bbox_xyxy": [
+        522.9168701171875,
+        362.54071044921875,
+        724.215087890625,
+        604.7568359375
+      ]
+    },
+    {
+      "label": "person",
+      "class_id": 0,
+      "confidence": 0.7058099508285522,
+      "bbox_xyxy": [
+        1493.631591796875,
+        690.0053100585938,
+        1707.8778076171875,
+        881.0919799804688
+      ]
+    }
+  ],
+  "inference_ms": 6.318449601531029,
+  "inference_ms_median": 6.339281797409058,
+  "inference_ms_min": 6.164850667119026,
+  "inference_ms_runs": [
+    6.47035613656044,
+    6.403299048542976,
+    6.339281797409058,
+    6.2144603580236435,
+    6.164850667119026
+  ],
+  "model": "YOLO",
+  "model_variant": "yolo26m",
+  "model_path": "yolo26m.pt",
+  "model_size_mb": 42.20552921295166,
+  "ultralytics_version": "8.4.64",
+  "warmup_runs": 2,
+  "measure_runs": 5,
+  "rendered_image": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/outputs/yolo/yolo26m/real_test2_000_yolo26m.jpg",
+  "detections_json": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/outputs/yolo/yolo26m/real_test2_000_yolo26m.json"
+}

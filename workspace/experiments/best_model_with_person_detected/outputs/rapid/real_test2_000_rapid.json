@@ -3,7 +3,6 @@
   "image": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/images/real_test2_000.jpg",
   "rendered_image": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/outputs/rapid/real_test2_000_rapid.jpg",
   "detections_json": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/outputs/rapid/real_test2_000_rapid.json",
-  "inference_ms": 46.27786763012409,
   "num_detections": 2,
   "detections": [
     [
@@ -22,5 +21,15 @@
       -41.081695556640625,
       0.9188754558563232
     ]
+  ],
+  "inference_ms": 45.44302299618721,
+  "inference_ms_median": 45.084159821271896,
+  "inference_ms_min": 43.88272762298584,
+  "inference_ms_runs": [
+    43.88272762298584,
+    46.40396498143673,
+    44.73710060119629,
+    45.084159821271896,
+    47.107161954045296
   ]
 }
