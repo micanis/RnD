@@ -1,0 +1,55 @@
+{
+  "image": "/Users/micanis/RnD/workspace/experiments/best_model_with_person_detected/images/cepdof_lunch1_0500.jpg",
+  "width": 2048,
+  "height": 2048,
+  "detections": [
+    {
+      "label": "person",
+      "class_id": 0,
+      "confidence": 0.9385251402854919,
+      "bbox_xyxy": [
+        679.2525024414062,
+        351.5826110839844,
+        1155.8756103515625,
+        762.794921875
+      ]
+    },
+    {
+      "label": "person",
+      "class_id": 0,
+      "confidence": 0.9010843634605408,
+      "bbox_xyxy": [
+        1161.912109375,
+        610.5836181640625,
+        1542.629638671875,
+        997.16650390625
+      ]
+    },
+    {
+      "label": "person",
+      "class_id": 0,
+      "confidence": 0.3108677566051483,
+      "bbox_xyxy": [
+        1491.760498046875,
+        523.3773193359375,
+        1650.922607421875,
+        659.8292846679688
+      ]
+    }
+  ],
+  "inference_ms": 131.64279199554585,
+  "inference_ms_median": 131.64279199554585,
+  "inference_ms_min": 131.64279199554585,
+  "inference_ms_runs": [
+    131.64279199554585
+  ],
+  "model": "YOLO",
+  "model_variant": "yolov8m",
+  "model_path": "models/yolov8m.pt",
+  "model_size_mb": 49.72160720825195,
+  "ultralytics_version": "8.4.50",
+  "warmup_runs": 1,
+  "measure_runs": 1,
+  "rendered_image": "workspace/experiments/best_model_with_person_detected/outputs/yolo_benchmark_test/yolov8m/cepdof_lunch1_0500_yolov8m.jpg",
+  "detections_json": "workspace/experiments/best_model_with_person_detected/outputs/yolo_benchmark_test/yolov8m/cepdof_lunch1_0500_yolov8m.json"
+}

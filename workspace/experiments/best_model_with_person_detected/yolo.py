@@ -2,18 +2,20 @@ from __future__ import annotations
 
 import argparse
 import json
+import statistics
 import time
 from pathlib import Path
 from typing import Any
 
 import cv2
+import ultralytics
 from ultralytics import YOLO
 
 
 EXPERIMENT_DIR = Path(__file__).resolve().parent
 DEFAULT_IMAGE_DIR = EXPERIMENT_DIR / "images"
 DEFAULT_OUTPUT_DIR = EXPERIMENT_DIR / "outputs" / "yolo"
-DEFAULT_MODEL = "yolo26m.pt"
+DEFAULT_MODELS = ["yolo26m.pt", "yolo11m.pt", "models/yolov8m.pt"]
 PERSON_CLASS_ID = 0
 
 
@@ -46,21 +48,62 @@ def draw_detections(image_bgr, detections: list[dict[str, Any]]) -> None:
         )
 
 
-def detect_one(
-    model: YOLO, image_path: Path, confidence_threshold: float
-) -> dict[str, Any]:
-    image_bgr = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
-    if image_bgr is None:
-        raise ValueError(f"failed to read image: {image_path}")
-
-    start = time.perf_counter()
-    results = model.predict(
+def predict_person(model: YOLO, image_bgr, confidence_threshold: float):
+    return model.predict(
         image_bgr,
         classes=[PERSON_CLASS_ID],
         conf=confidence_threshold,
         verbose=False,
     )
-    elapsed_ms = (time.perf_counter() - start) * 1000
+
+
+def timed_predict(
+    model: YOLO,
+    image_bgr,
+    confidence_threshold: float,
+    warmup_runs: int,
+    measure_runs: int,
+) -> tuple[Any, list[float]]:
+    for _ in range(warmup_runs):
+        predict_person(model, image_bgr, confidence_threshold)
+
+    results = None
+    elapsed_times_ms: list[float] = []
+    for _ in range(measure_runs):
+        start = time.perf_counter()
+        results = predict_person(model, image_bgr, confidence_threshold)
+        elapsed_times_ms.append((time.perf_counter() - start) * 1000)
+
+    return results, elapsed_times_ms
+
+
+def summarize_times(elapsed_times_ms: list[float]) -> dict[str, Any]:
+    return {
+        "inference_ms": statistics.mean(elapsed_times_ms),
+        "inference_ms_median": statistics.median(elapsed_times_ms),
+        "inference_ms_min": min(elapsed_times_ms),
+        "inference_ms_runs": elapsed_times_ms,
+    }
+
+
+def detect_one(
+    model: YOLO,
+    image_path: Path,
+    confidence_threshold: float,
+    warmup_runs: int,
+    measure_runs: int,
+) -> dict[str, Any]:
+    image_bgr = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
+    if image_bgr is None:
+        raise ValueError(f"failed to read image: {image_path}")
+
+    results, elapsed_times_ms = timed_predict(
+        model,
+        image_bgr,
+        confidence_threshold,
+        warmup_runs,
+        measure_runs,
+    )
 
     detections: list[dict[str, Any]] = []
     boxes = results[0].boxes
@@ -83,17 +126,41 @@ def detect_one(
         "image": str(image_path),
         "width": int(image_bgr.shape[1]),
         "height": int(image_bgr.shape[0]),
-        "inference_ms": elapsed_ms,
         "detections": detections,
         "rendered_bgr": image_bgr,
+        **summarize_times(elapsed_times_ms),
     }
 
 
-def write_result(result: dict[str, Any], output_dir: Path) -> dict[str, Any]:
+def safe_model_name(model_ref: str) -> str:
+    return Path(model_ref).stem.replace("/", "_")
+
+
+def get_model_size_mb(model: YOLO, model_ref: str) -> float | None:
+    candidate_paths = [Path(model_ref)]
+    model_attr = getattr(model, "model", None)
+    for attr_name in ("pt_path", "yaml_file"):
+        attr_value = getattr(model_attr, attr_name, None)
+        if attr_value:
+            candidate_paths.append(Path(attr_value))
+
+    ckpt_path = getattr(model, "ckpt_path", None)
+    if ckpt_path:
+        candidate_paths.append(Path(ckpt_path))
+
+    for path in candidate_paths:
+        if path.exists() and path.is_file():
+            return path.stat().st_size / (1024 * 1024)
+    return None
+
+
+def write_result(
+    result: dict[str, Any], output_dir: Path, model_name: str
+) -> dict[str, Any]:
     output_dir.mkdir(parents=True, exist_ok=True)
     image_path = Path(result["image"])
-    rendered_path = output_dir / f"{image_path.stem}_yolo.jpg"
-    json_path = output_dir / f"{image_path.stem}_yolo.json"
+    rendered_path = output_dir / f"{image_path.stem}_{model_name}.jpg"
+    json_path = output_dir / f"{image_path.stem}_{model_name}.json"
 
     rendered_bgr = result.pop("rendered_bgr")
     ok = cv2.imwrite(str(rendered_path), rendered_bgr, [cv2.IMWRITE_JPEG_QUALITY, 95])
@@ -115,37 +182,53 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--image-dir", type=Path, default=DEFAULT_IMAGE_DIR)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
     parser.add_argument(
-        "--model",
-        default=DEFAULT_MODEL,
+        "--models",
+        nargs="+",
+        default=DEFAULT_MODELS,
         help=(
-            "Ultralytics model name or local path. "
-            "Examples: yolo26m.pt, yolo11m.pt, models/yolov8m.pt"
+            "Ultralytics model names or local paths. "
+            "Default: yolo26m.pt yolo11m.pt models/yolov8m.pt"
         ),
     )
     parser.add_argument("--conf", type=float, default=0.25)
+    parser.add_argument("--warmup-runs", type=int, default=2)
+    parser.add_argument("--measure-runs", type=int, default=5)
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    model_ref = str(args.model)
-    model = YOLO(model_ref)
-    model_path = Path(model_ref)
-    model_size_mb = (
-        model_path.stat().st_size / (1024 * 1024) if model_path.exists() else None
-    )
     results = []
+    images = collect_images(args.image_dir)
 
-    for image_path in collect_images(args.image_dir):
-        result = detect_one(model, image_path, args.conf)
-        result["model"] = "YOLO"
-        result["model_path"] = model_ref
-        result["model_size_mb"] = model_size_mb
-        results.append(write_result(result, args.output_dir))
-        print(
-            f"{image_path.name}: {len(result['detections'])} detections, "
-            f"{result['inference_ms']:.1f} ms"
-        )
+    for model_ref in args.models:
+        model_ref = str(model_ref)
+        model = YOLO(model_ref)
+        model_name = safe_model_name(model_ref)
+        model_size_mb = get_model_size_mb(model, model_ref)
+
+        model_output_dir = args.output_dir / model_name
+        for image_path in images:
+            result = detect_one(
+                model,
+                image_path,
+                args.conf,
+                args.warmup_runs,
+                args.measure_runs,
+            )
+            result["model"] = "YOLO"
+            result["model_variant"] = model_name
+            result["model_path"] = model_ref
+            result["model_size_mb"] = model_size_mb
+            result["ultralytics_version"] = ultralytics.__version__
+            result["warmup_runs"] = args.warmup_runs
+            result["measure_runs"] = args.measure_runs
+            results.append(write_result(result, model_output_dir, model_name))
+            print(
+                f"{model_name} {image_path.name}: "
+                f"{len(result['detections'])} detections, "
+                f"{result['inference_ms']:.1f} ms avg"
+            )
 
     summary_path = args.output_dir / "summary_yolo.json"
     summary_path.write_text(

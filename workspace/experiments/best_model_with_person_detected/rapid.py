@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import importlib
 import json
+import statistics
 import sys
 import time
 from pathlib import Path
@@ -105,17 +106,57 @@ def count_detections(detections: Any) -> int:
     return 1
 
 
-def detect_one(detector: Any, image_path: Path, output_dir: Path) -> dict[str, Any]:
+def timed_detect(
+    detector: Any,
+    image_path: Path,
+    warmup_runs: int,
+    measure_runs: int,
+) -> tuple[Any, list[float]]:
+    for _ in range(warmup_runs):
+        detector.detect_one(
+            img_path=str(image_path),
+            return_img=False,
+        )
+
+    detections = None
+    elapsed_times_ms: list[float] = []
+    for _ in range(measure_runs):
+        start = time.perf_counter()
+        detections = detector.detect_one(
+            img_path=str(image_path),
+            return_img=False,
+        )
+        elapsed_times_ms.append((time.perf_counter() - start) * 1000)
+
+    return detections, elapsed_times_ms
+
+
+def summarize_times(elapsed_times_ms: list[float]) -> dict[str, Any]:
+    return {
+        "inference_ms": statistics.mean(elapsed_times_ms),
+        "inference_ms_median": statistics.median(elapsed_times_ms),
+        "inference_ms_min": min(elapsed_times_ms),
+        "inference_ms_runs": elapsed_times_ms,
+    }
+
+
+def detect_one(
+    detector: Any,
+    image_path: Path,
+    output_dir: Path,
+    warmup_runs: int,
+    measure_runs: int,
+) -> dict[str, Any]:
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / f"{image_path.stem}_rapid.jpg"
     json_path = output_dir / f"{image_path.stem}_rapid.json"
 
-    start = time.perf_counter()
-    detections = detector.detect_one(
-        img_path=str(image_path),
-        return_img=False,
+    detections, elapsed_times_ms = timed_detect(
+        detector,
+        image_path,
+        warmup_runs,
+        measure_runs,
     )
-    elapsed_ms = (time.perf_counter() - start) * 1000
 
     rendered = detector.detect_one(
         img_path=str(image_path),
@@ -128,9 +169,9 @@ def detect_one(detector: Any, image_path: Path, output_dir: Path) -> dict[str, A
         "image": str(image_path),
         "rendered_image": str(output_path),
         "detections_json": str(json_path),
-        "inference_ms": elapsed_ms,
         "num_detections": count_detections(detections),
         "detections": to_jsonable(detections),
+        **summarize_times(elapsed_times_ms),
     }
     json_path.write_text(
         json.dumps(result, ensure_ascii=False, indent=2),
@@ -149,6 +190,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--weights", type=Path, default=DEFAULT_WEIGHTS_PATH)
     parser.add_argument("--input-size", type=int, default=1024)
     parser.add_argument("--conf", type=float, default=0.3)
+    parser.add_argument("--warmup-runs", type=int, default=2)
+    parser.add_argument("--measure-runs", type=int, default=5)
     parser.add_argument("--cpu", action="store_true", help="disable CUDA")
     return parser.parse_args()
 
@@ -166,11 +209,19 @@ def main() -> None:
     model_size_mb = args.weights.stat().st_size / (1024 * 1024)
     results = []
     for image_path in collect_images(args.image_dir):
-        result = detect_one(detector, image_path, args.output_dir)
+        result = detect_one(
+            detector,
+            image_path,
+            args.output_dir,
+            args.warmup_runs,
+            args.measure_runs,
+        )
         result["weights_path"] = str(args.weights)
         result["model_size_mb"] = model_size_mb
+        result["warmup_runs"] = args.warmup_runs
+        result["measure_runs"] = args.measure_runs
         results.append(result)
-        print(f"{image_path.name}: {result['inference_ms']:.1f} ms")
+        print(f"{image_path.name}: {result['inference_ms']:.1f} ms avg")
 
     summary_path = args.output_dir / "summary_rapid.json"
     summary_path.write_text(
