@@ -13,7 +13,7 @@ from ultralytics import YOLO
 EXPERIMENT_DIR = Path(__file__).resolve().parent
 DEFAULT_IMAGE_DIR = EXPERIMENT_DIR / "images"
 DEFAULT_OUTPUT_DIR = EXPERIMENT_DIR / "outputs" / "yolo"
-DEFAULT_MODEL_PATH = Path(__file__).resolve().parents[3] / "models" / "yolov8m.pt"
+DEFAULT_MODEL = "yolo26m.pt"
 PERSON_CLASS_ID = 0
 
 
@@ -110,24 +110,32 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--image-dir", type=Path, default=DEFAULT_IMAGE_DIR)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
-    parser.add_argument("--model", type=Path, default=DEFAULT_MODEL_PATH)
+    parser.add_argument(
+        "--model",
+        default=DEFAULT_MODEL,
+        help=(
+            "Ultralytics model name or local path. "
+            "Examples: yolo26m.pt, yolo11m.pt, models/yolov8m.pt"
+        ),
+    )
     parser.add_argument("--conf", type=float, default=0.25)
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    if not args.model.exists():
-        raise FileNotFoundError(f"YOLO model does not exist: {args.model}")
-
-    model = YOLO(str(args.model))
-    model_size_mb = args.model.stat().st_size / (1024 * 1024)
+    model_ref = str(args.model)
+    model = YOLO(model_ref)
+    model_path = Path(model_ref)
+    model_size_mb = (
+        model_path.stat().st_size / (1024 * 1024) if model_path.exists() else None
+    )
     results = []
 
     for image_path in collect_images(args.image_dir):
         result = detect_one(model, image_path, args.conf)
         result["model"] = "YOLO"
-        result["model_path"] = str(args.model)
+        result["model_path"] = model_ref
         result["model_size_mb"] = model_size_mb
         results.append(write_result(result, args.output_dir))
         print(
