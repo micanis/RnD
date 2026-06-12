@@ -1,0 +1,58 @@
+[
+  {
+    "model": "RAPiD",
+    "image": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/images/cepdof_lunch1_0500.jpg",
+    "rendered_image": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/outputs/rapid/cepdof_lunch1_0500_rapid.jpg",
+    "detections_json": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/outputs/rapid/cepdof_lunch1_0500_rapid.json",
+    "inference_ms": 229.5527122914791,
+    "num_detections": 2,
+    "detections": [
+      [
+        912.188232421875,
+        556.3554077148438,
+        366.6289978027344,
+        409.8726806640625,
+        -98.3346176147461,
+        0.9895413517951965
+      ],
+      [
+        1365.2742919921875,
+        820.7681884765625,
+        362.8139343261719,
+        390.1047058105469,
+        -125.97346496582031,
+        0.9324036240577698
+      ]
+    ],
+    "weights_path": "/home/yamanaka/RnD/workspace/src/RAPiD/weights/pL1_MWHB1024_Mar11_4000.ckpt",
+    "model_size_mb": 235.00089645385742
+  },
+  {
+    "model": "RAPiD",
+    "image": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/images/real_test2_000.jpg",
+    "rendered_image": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/outputs/rapid/real_test2_000_rapid.jpg",
+    "detections_json": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/outputs/rapid/real_test2_000_rapid.json",
+    "inference_ms": 46.27786763012409,
+    "num_detections": 2,
+    "detections": [
+      [
+        620.023681640625,
+        488.1162109375,
+        140.3827362060547,
+        267.37274169921875,
+        -34.861114501953125,
+        0.9910807013511658
+      ],
+      [
+        1599.462158203125,
+        758.9411010742188,
+        199.13235473632812,
+        276.6571960449219,
+        -41.081695556640625,
+        0.9188754558563232
+      ]
+    ],
+    "weights_path": "/home/yamanaka/RnD/workspace/src/RAPiD/weights/pL1_MWHB1024_Mar11_4000.ckpt",
+    "model_size_mb": 235.00089645385742
+  }
+]

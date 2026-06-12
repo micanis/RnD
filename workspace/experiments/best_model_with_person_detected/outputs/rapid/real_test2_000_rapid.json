@@ -1,0 +1,26 @@
+{
+  "model": "RAPiD",
+  "image": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/images/real_test2_000.jpg",
+  "rendered_image": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/outputs/rapid/real_test2_000_rapid.jpg",
+  "detections_json": "/home/yamanaka/RnD/workspace/experiments/best_model_with_person_detected/outputs/rapid/real_test2_000_rapid.json",
+  "inference_ms": 46.27786763012409,
+  "num_detections": 2,
+  "detections": [
+    [
+      620.023681640625,
+      488.1162109375,
+      140.3827362060547,
+      267.37274169921875,
+      -34.861114501953125,
+      0.9910807013511658
+    ],
+    [
+      1599.462158203125,
+      758.9411010742188,
+      199.13235473632812,
+      276.6571960449219,
+      -41.081695556640625,
+      0.9188754558563232
+    ]
+  ]
+}
